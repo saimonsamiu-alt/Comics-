@@ -1,0 +1,257 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidComic(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.synopsis is string && data.synopsis.size() <= 2000 &&
+             data.authorId is string && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 100 &&
+             data.genre is string && data.genre.size() <= 50 &&
+             (!('coverUrl' in data) || data.coverUrl == null || (data.coverUrl is string && data.coverUrl.size() <= 500000)) &&
+             (!('ratingAverage' in data) || data.ratingAverage is number) &&
+             (!('ratingCount' in data) || data.ratingCount is int) &&
+             (!('viewCount' in data) || data.viewCount is int) &&
+             (!('chapterCount' in data) || data.chapterCount is int) &&
+             (!('isPublished' in data) || data.isPublished is bool);
+    }
+
+    function isValidChapter(data) {
+      return data.comicId is string && data.comicId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.chapterNumber is int && data.chapterNumber >= 1 &&
+             data.panelsJson is string && data.panelsJson.size() <= 1000000;
+    }
+
+    function isValidComment(data) {
+      return data.comicId is string && data.comicId.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userName is string && data.userName.size() >= 1 && data.userName.size() <= 100 &&
+             data.content is string && data.content.size() >= 1 && data.content.size() <= 1000 &&
+             (!('userAvatar' in data) || data.userAvatar == null || (data.userAvatar is string && data.userAvatar.size() <= 500));
+    }
+
+    function isValidRating(data) {
+      return data.comicId is string && data.comicId.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.score is int && data.score >= 1 && data.score <= 5;
+    }
+
+    function isValidBookmark(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.comicId is string && data.comicId.size() <= 128 &&
+             data.comicTitle is string && data.comicTitle.size() <= 100 &&
+             data.lastReadChapter is int &&
+             data.progressPercent is int &&
+             (!('coverUrl' in data) || data.coverUrl == null || (data.coverUrl is string && data.coverUrl.size() <= 500000));
+    }
+
+    function isValidFeedPost(data) {
+      return data.authorId is string && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 100 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 500000 &&
+             (!('characterDesign' in data) || (data.characterDesign is string && data.characterDesign.size() <= 10000)) &&
+             (!('likesCount' in data) || data.likesCount is int) &&
+             (!('remixCount' in data) || data.remixCount is int);
+    }
+
+    function isValidCollaboration(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 100 &&
+             data.status is string && (data.status == 'active' || data.status == 'completed') &&
+             data.currentPanelScript is string && data.currentPanelScript.size() <= 50000 &&
+             (!('collaboratorIds' in data) || (data.collaboratorIds is string && data.collaboratorIds.size() <= 1000));
+    }
+
+    // Comics collection
+    match /comics/{comicId} {
+      allow get, list: if true;
+
+      allow create: if isSignedIn() &&
+                       isValidId(comicId) &&
+                       request.auth.uid == incoming().authorId &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidComic(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(comicId) &&
+                       incoming().authorId == existing().authorId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       isValidComic(incoming()) &&
+                       (
+                         request.auth.uid == existing().authorId ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['ratingAverage', 'ratingCount', 'viewCount', 'chapterCount', 'updatedAt'])
+                       );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(comicId) &&
+                       request.auth.uid == existing().authorId;
+
+      // Chapters subcollection
+      match /chapters/{chapterId} {
+        allow get, list: if true;
+
+        allow create: if isSignedIn() &&
+                         isValidId(chapterId) &&
+                         request.auth.uid == get(/databases/$(database)/documents/comics/$(comicId)).data.authorId &&
+                         incoming().comicId == comicId &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         incoming().updatedAt is timestamp &&
+                         incoming().updatedAt <= request.time &&
+                         isValidChapter(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(chapterId) &&
+                         request.auth.uid == get(/databases/$(database)/documents/comics/$(comicId)).data.authorId &&
+                         incoming().comicId == existing().comicId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().updatedAt is timestamp &&
+                         isValidChapter(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'chapterNumber', 'panelsJson', 'updatedAt']);
+
+        allow delete: if isSignedIn() &&
+                         isValidId(chapterId) &&
+                         request.auth.uid == get(/databases/$(database)/documents/comics/$(comicId)).data.authorId;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow get, list: if true;
+
+        allow create: if isSignedIn() &&
+                         isValidId(commentId) &&
+                         request.auth.uid == incoming().userId &&
+                         incoming().comicId == comicId &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidComment(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(commentId) &&
+                         request.auth.uid == existing().userId &&
+                         incoming().comicId == existing().comicId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidComment(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['content']);
+
+        allow delete: if isSignedIn() &&
+                         isValidId(commentId) &&
+                         (request.auth.uid == existing().userId || request.auth.uid == get(/databases/$(database)/documents/comics/$(comicId)).data.authorId);
+      }
+
+      // Ratings subcollection
+      match /ratings/{userId} {
+        allow get, list: if true;
+
+        allow create, update: if isSignedIn() &&
+                                 isValidId(userId) &&
+                                 request.auth.uid == userId &&
+                                 incoming().userId == userId &&
+                                 incoming().comicId == comicId &&
+                                 incoming().updatedAt is timestamp &&
+                                 isValidRating(incoming());
+
+        allow delete: if isSignedIn() &&
+                         isValidId(userId) &&
+                         request.auth.uid == userId;
+      }
+    }
+
+    // User bookmarks
+    match /users/{userId}/bookmarks/{comicId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create, update: if isSignedIn() &&
+                               isValidId(comicId) &&
+                               request.auth.uid == userId &&
+                               incoming().userId == userId &&
+                               incoming().comicId == comicId &&
+                               incoming().updatedAt is timestamp &&
+                               isValidBookmark(incoming());
+
+      allow delete: if isSignedIn() &&
+                       isValidId(comicId) &&
+                       request.auth.uid == userId;
+    }
+
+    // Social Feed Posts
+    match /feed_posts/{postId} {
+      allow get, list: if true;
+
+      allow create: if isSignedIn() &&
+                       isValidId(postId) &&
+                       request.auth.uid == incoming().authorId &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidFeedPost(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(postId) &&
+                       incoming().authorId == existing().authorId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       isValidFeedPost(incoming()) &&
+                       (
+                         request.auth.uid == existing().authorId ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['likesCount', 'remixCount', 'updatedAt'])
+                       );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(postId) &&
+                       request.auth.uid == existing().authorId;
+    }
+
+    // Collaborations
+    match /collaborations/{collabId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn() &&
+                       isValidId(collabId) &&
+                       request.auth.uid == incoming().ownerId &&
+                       incoming().updatedAt is timestamp &&
+                       isValidCollaboration(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(collabId) &&
+                       incoming().ownerId == existing().ownerId &&
+                       incoming().updatedAt is timestamp &&
+                       isValidCollaboration(incoming());
+
+      allow delete: if isSignedIn() &&
+                       isValidId(collabId) &&
+                       request.auth.uid == existing().ownerId;
+    }
+  }
+}

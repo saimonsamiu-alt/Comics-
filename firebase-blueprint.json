@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "Comic": {
+      "title": "Comic",
+      "description": "Represents a published or community created comic series",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the comic" },
+        "synopsis": { "type": "string", "description": "Synopsis of the comic" },
+        "authorId": { "type": "string", "description": "User ID of author" },
+        "authorName": { "type": "string", "description": "Display name of author" },
+        "genre": { "type": "string", "description": "Genre e.g. Action, Comedy, Fantasy" },
+        "coverUrl": { "type": "string", "description": "Cover thumbnail url or drawable key" },
+        "ratingAverage": { "type": "number", "description": "Average rating score from 1.0 to 5.0" },
+        "ratingCount": { "type": "integer", "description": "Total number of ratings" },
+        "viewCount": { "type": "integer", "description": "Total views count" },
+        "chapterCount": { "type": "integer", "description": "Number of chapters" },
+        "isPublished": { "type": "boolean", "description": "Whether visible to public" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["title", "synopsis", "authorId", "authorName", "genre", "createdAt", "updatedAt"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "A chapter containing comic panels and dialogues",
+      "type": "object",
+      "properties": {
+        "comicId": { "type": "string", "description": "Parent comic ID" },
+        "title": { "type": "string", "description": "Chapter title" },
+        "chapterNumber": { "type": "integer", "description": "Sequential chapter index" },
+        "panelsJson": { "type": "string", "description": "Serialized panels, bubbles and animations data" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["comicId", "title", "chapterNumber", "panelsJson", "createdAt", "updatedAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "User comment on a comic",
+      "type": "object",
+      "properties": {
+        "comicId": { "type": "string", "description": "Parent comic ID" },
+        "userId": { "type": "string", "description": "Author user ID" },
+        "userName": { "type": "string", "description": "Author display name" },
+        "userAvatar": { "type": "string", "description": "Author avatar indicator" },
+        "content": { "type": "string", "description": "Comment text" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["comicId", "userId", "userName", "content", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "User star rating for a comic",
+      "type": "object",
+      "properties": {
+        "comicId": { "type": "string", "description": "Rated comic ID" },
+        "userId": { "type": "string", "description": "User ID of rater" },
+        "score": { "type": "integer", "description": "Star score 1 to 5" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["comicId", "userId", "score", "updatedAt"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "User saved comic reading progress and bookmark",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "comicId": { "type": "string", "description": "Bookmarked comic ID" },
+        "comicTitle": { "type": "string", "description": "Comic title snapshot" },
+        "coverUrl": { "type": "string", "description": "Cover snapshot" },
+        "lastReadChapter": { "type": "integer", "description": "Last chapter read" },
+        "progressPercent": { "type": "integer", "description": "Progress percentage" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["userId", "comicId", "comicTitle", "lastReadChapter", "progressPercent", "updatedAt"]
+    },
+    "FeedPost": {
+      "title": "FeedPost",
+      "description": "Social feed post showcasing character sketches and comic art",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string", "description": "Author user ID" },
+        "authorName": { "type": "string", "description": "Author display name" },
+        "title": { "type": "string", "description": "Post title or character name" },
+        "description": { "type": "string", "description": "Sketch description and prompt notes" },
+        "imageUrl": { "type": "string", "description": "Image data uri or asset reference" },
+        "characterDesign": { "type": "string", "description": "Character styling options metadata" },
+        "likesCount": { "type": "integer", "description": "Total likes" },
+        "remixCount": { "type": "integer", "description": "Number of remixes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["authorId", "authorName", "title", "description", "imageUrl", "createdAt", "updatedAt"]
+    },
+    "Collaboration": {
+      "title": "Collaboration",
+      "description": "Real-time collaborative comic workshop project",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Project title" },
+        "ownerId": { "type": "string", "description": "Project owner ID" },
+        "ownerName": { "type": "string", "description": "Owner name" },
+        "collaboratorIds": { "type": "string", "description": "Comma separated collaborator IDs" },
+        "status": { "type": "string", "description": "active or completed" },
+        "currentPanelScript": { "type": "string", "description": "Shared story script and dialogue lines" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["title", "ownerId", "ownerName", "status", "currentPanelScript", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/comics/{comicId}": {
+      "schema": { "$ref": "#/entities/Comic" },
+      "description": "Published comics collection with guest read access and author write access"
+    },
+    "/comics/{comicId}/chapters/{chapterId}": {
+      "schema": { "$ref": "#/entities/Chapter" },
+      "description": "Chapters and comic panel frames"
+    },
+    "/comics/{comicId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Reader comments on comics"
+    },
+    "/comics/{comicId}/ratings/{userId}": {
+      "schema": { "$ref": "#/entities/Rating" },
+      "description": "User ratings per comic"
+    },
+    "/users/{userId}/bookmarks/{comicId}": {
+      "schema": { "$ref": "#/entities/Bookmark" },
+      "description": "User personalized bookmarks and sync progress"
+    },
+    "/feed_posts/{postId}": {
+      "schema": { "$ref": "#/entities/FeedPost" },
+      "description": "Community sketch & comic social feed"
+    },
+    "/collaborations/{collabId}": {
+      "schema": { "$ref": "#/entities/Collaboration" },
+      "description": "Real-time co-creation rooms"
+    }
+  }
+}
