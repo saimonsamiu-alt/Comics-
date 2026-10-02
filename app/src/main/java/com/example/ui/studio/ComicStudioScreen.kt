@@ -34,6 +34,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
@@ -42,6 +44,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Image
@@ -55,6 +58,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -69,6 +73,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -95,6 +100,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.local.entity.SketchEntity
 import com.example.data.model.SoundEffectItem
 import com.example.data.model.SpeechBubbleItem
+import com.example.data.model.StickerItem
 import com.example.data.repository.ComicRepository
 import com.example.ui.auth.SignInPromptDialog
 import kotlinx.coroutines.launch
@@ -125,9 +131,10 @@ fun ComicStudioScreen(
     val roomSketches by repository.observeSketches().collectAsStateWithLifecycle(initialValue = emptyList())
     var activeCustomBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var activeSketchEntity by remember { mutableStateOf<SketchEntity?>(null) }
+    var showCameraXViewfinder by remember { mutableStateOf(false) }
     var showSnapDialog by remember { mutableStateOf(false) }
     var pendingCapturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var pendingCaptureSource by remember { mutableStateOf("CAMERA") }
+    var pendingCaptureSource by remember { mutableStateOf("CAMERAX") }
     var pendingSketchTitle by remember { mutableStateOf("") }
     var pendingDetectedSubject by remember { mutableStateOf("Pencil Character") }
 
@@ -148,7 +155,7 @@ fun ComicStudioScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            cameraLauncher.launch(null)
+            showCameraXViewfinder = true
         } else {
             Toast.makeText(context, "Camera permission needed to snap paper sketches", Toast.LENGTH_SHORT).show()
         }
@@ -186,7 +193,7 @@ fun ComicStudioScreen(
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
         if (hasPermission) {
-            cameraLauncher.launch(null)
+            showCameraXViewfinder = true
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
@@ -199,6 +206,7 @@ fun ComicStudioScreen(
     }
 
     // Bubbles & Sound FX
+    var selectedBubbleId by remember { mutableStateOf<String?>(null) }
     val speechBubbles = remember {
         mutableStateListOf(
             SpeechBubbleItem(
@@ -206,7 +214,8 @@ fun ComicStudioScreen(
                 text = "Drawn on notebook, now ready for adventure!",
                 type = "Speech",
                 xRatio = 0.12f,
-                yRatio = 0.08f
+                yRatio = 0.08f,
+                scale = 1.0f
             )
         )
     }
@@ -223,15 +232,74 @@ fun ComicStudioScreen(
         )
     }
 
+    var selectedStickerId by remember { mutableStateOf<String?>(null) }
+    val stickers = remember {
+        mutableStateListOf(
+            StickerItem(
+                id = "sticker_star",
+                emojiOrIcon = "⭐",
+                label = "Star",
+                category = "Power",
+                xRatio = 0.72f,
+                yRatio = 0.18f,
+                scale = 1.1f
+            )
+        )
+    }
+
     // Animation Controls
     var isAnimating by remember { mutableStateOf(false) }
     var animationMode by remember { mutableStateOf("Camera Pan & Zoom") }
+    var showShareExportDialog by remember { mutableStateOf(false) }
+    var showSavePanelDialog by remember { mutableStateOf(false) }
+    var isSavingPanel by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showPublishDialog by remember { mutableStateOf(false) }
     var showSignInPrompt by remember { mutableStateOf(false) }
 
     // Active Editor Tool Tab: 0 -> Character & Inks, 1 -> Dialogues & SFX, 2 -> Animation Motion
     var selectedToolTab by remember { mutableIntStateOf(0) }
+
+    // Undo / Redo Stack Manager
+    val undoRedoManager = remember { UndoRedoManager() }
+
+    fun takeSnapshot(): ComicEditorSnapshot {
+        return ComicEditorSnapshot(
+            sketchType = selectedSketch,
+            customBitmap = activeCustomBitmap,
+            activeSketchEntity = activeSketchEntity,
+            colorStyle = colorStyle,
+            characterColor = characterColor,
+            auraType = auraType,
+            inkingEdgeContrast = inkingEdgeContrast,
+            isCleanPaperEnabled = isCleanPaperEnabled,
+            speechBubbles = speechBubbles.toList(),
+            stickers = stickers.toList(),
+            soundEffects = soundEffects.toList(),
+            animationMode = animationMode
+        )
+    }
+
+    fun restoreSnapshot(snapshot: ComicEditorSnapshot) {
+        selectedSketch = snapshot.sketchType
+        activeCustomBitmap = snapshot.customBitmap
+        activeSketchEntity = snapshot.activeSketchEntity
+        colorStyle = snapshot.colorStyle
+        characterColor = snapshot.characterColor
+        auraType = snapshot.auraType
+        inkingEdgeContrast = snapshot.inkingEdgeContrast
+        isCleanPaperEnabled = snapshot.isCleanPaperEnabled
+        animationMode = snapshot.animationMode
+
+        speechBubbles.clear()
+        speechBubbles.addAll(snapshot.speechBubbles)
+
+        stickers.clear()
+        stickers.addAll(snapshot.stickers)
+
+        soundEffects.clear()
+        soundEffects.addAll(snapshot.soundEffects)
+    }
 
     Column(
         modifier = modifier
@@ -247,7 +315,7 @@ fun ComicStudioScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(
                     text = "Comic Studio & Sketch AI",
                     style = MaterialTheme.typography.headlineSmall,
@@ -261,11 +329,67 @@ fun ComicStudioScreen(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Undo Button
+                IconButton(
+                    onClick = {
+                        val prev = undoRedoManager.undo(takeSnapshot())
+                        if (prev != null) {
+                            restoreSnapshot(prev)
+                            Toast.makeText(context, "Undo", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = undoRedoManager.canUndo,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            if (undoRedoManager.canUndo) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            CircleShape
+                        )
+                        .testTag("undo_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Undo,
+                        contentDescription = "Undo previous action",
+                        tint = if (undoRedoManager.canUndo) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Redo Button
+                IconButton(
+                    onClick = {
+                        val next = undoRedoManager.redo(takeSnapshot())
+                        if (next != null) {
+                            restoreSnapshot(next)
+                            Toast.makeText(context, "Redo", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = undoRedoManager.canRedo,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            if (undoRedoManager.canRedo) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            CircleShape
+                        )
+                        .testTag("redo_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Redo,
+                        contentDescription = "Redo next action",
+                        tint = if (undoRedoManager.canRedo) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Play / Pause Animation Button
                 IconButton(
                     onClick = { isAnimating = !isAnimating },
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(40.dp)
                         .background(
                             if (isAnimating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             CircleShape
@@ -275,7 +399,8 @@ fun ComicStudioScreen(
                     Icon(
                         imageVector = if (isAnimating) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Toggle Animation",
-                        tint = if (isAnimating) Color.White else MaterialTheme.colorScheme.onSurface
+                        tint = if (isAnimating) Color.White else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -302,10 +427,65 @@ fun ComicStudioScreen(
                 customBitmap = activeCustomBitmap,
                 inkingEdgeContrast = inkingEdgeContrast,
                 isCleanPaperEnabled = isCleanPaperEnabled,
+                selectedBubbleId = selectedBubbleId,
+                onSelectBubble = { selectedBubbleId = it },
                 onBubblePositionChanged = { bubbleId, newX, newY ->
                     val index = speechBubbles.indexOfFirst { it.id == bubbleId }
                     if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
                         speechBubbles[index] = speechBubbles[index].copy(xRatio = newX, yRatio = newY)
+                    }
+                },
+                onBubbleScaleChanged = { bubbleId, newScale ->
+                    val index = speechBubbles.indexOfFirst { it.id == bubbleId }
+                    if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
+                        speechBubbles[index] = speechBubbles[index].copy(scale = newScale)
+                    }
+                },
+                onBubbleTextChanged = { bubbleId, newText ->
+                    val index = speechBubbles.indexOfFirst { it.id == bubbleId }
+                    if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
+                        speechBubbles[index] = speechBubbles[index].copy(text = newText)
+                    }
+                },
+                onBubbleDeleted = { bubbleId ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    speechBubbles.removeAll { it.id == bubbleId }
+                    if (selectedBubbleId == bubbleId) {
+                        selectedBubbleId = null
+                    }
+                },
+                stickers = stickers,
+                selectedStickerId = selectedStickerId,
+                onSelectSticker = { selectedStickerId = it },
+                onStickerPositionChanged = { stickerId, newX, newY ->
+                    val index = stickers.indexOfFirst { it.id == stickerId }
+                    if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
+                        stickers[index] = stickers[index].copy(xRatio = newX, yRatio = newY)
+                    }
+                },
+                onStickerScaleChanged = { stickerId, newScale ->
+                    val index = stickers.indexOfFirst { it.id == stickerId }
+                    if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
+                        stickers[index] = stickers[index].copy(scale = newScale)
+                    }
+                },
+                onStickerRotateChanged = { stickerId, newRot ->
+                    val index = stickers.indexOfFirst { it.id == stickerId }
+                    if (index >= 0) {
+                        undoRedoManager.recordSnapshot(takeSnapshot())
+                        stickers[index] = stickers[index].copy(rotation = newRot)
+                    }
+                },
+                onStickerDeleted = { stickerId ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    stickers.removeAll { it.id == stickerId }
+                    if (selectedStickerId == stickerId) {
+                        selectedStickerId = null
                     }
                 }
             )
@@ -419,36 +599,68 @@ fun ComicStudioScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // Action Toolbar (Export / Publish)
-        Row(
+        // Action Toolbar (Export & Share / Cloud Save / Motion Reel / Publish)
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { showExportDialog = true },
-                modifier = Modifier.weight(1f).testTag("export_animation_button"),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.Movie, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Export Animation")
+                Button(
+                    onClick = { showShareExportDialog = true },
+                    modifier = Modifier.weight(1f).testTag("share_panel_image_button"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Export & Share", maxLines = 1)
+                }
+
+                Button(
+                    onClick = { showSavePanelDialog = true },
+                    modifier = Modifier.weight(1f).testTag("save_panel_cloud_button"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Cloud Save", maxLines = 1)
+                }
             }
 
-            Button(
-                onClick = {
-                    if (currentUserId == null) {
-                        showSignInPrompt = true
-                    } else {
-                        showPublishDialog = true
-                    }
-                },
-                modifier = Modifier.weight(1f).testTag("publish_comic_button"),
-                shape = RoundedCornerShape(12.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Publish / Share")
+                Button(
+                    onClick = { showExportDialog = true },
+                    modifier = Modifier.weight(1f).testTag("export_animation_button"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(Icons.Default.Movie, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Motion Reel", maxLines = 1)
+                }
+
+                Button(
+                    onClick = {
+                        if (currentUserId == null) {
+                            showSignInPrompt = true
+                        } else {
+                            showPublishDialog = true
+                        }
+                    },
+                    modifier = Modifier.weight(1f).testTag("publish_comic_button"),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Publish Comic", maxLines = 1)
+                }
             }
         }
 
@@ -459,17 +671,22 @@ fun ComicStudioScreen(
             Tab(
                 selected = selectedToolTab == 0,
                 onClick = { selectedToolTab = 0 },
-                text = { Text("Character & Inks") }
+                text = { Text("Inks & Art") }
             )
             Tab(
                 selected = selectedToolTab == 1,
                 onClick = { selectedToolTab = 1 },
-                text = { Text("Dialogues & SFX") }
+                text = { Text("Dialogues") }
             )
             Tab(
                 selected = selectedToolTab == 2,
                 onClick = { selectedToolTab = 2 },
-                text = { Text("Motion & Camera") }
+                text = { Text("Stickers") }
+            )
+            Tab(
+                selected = selectedToolTab == 3,
+                onClick = { selectedToolTab = 3 },
+                text = { Text("Motion") }
             )
         }
 
@@ -479,6 +696,7 @@ fun ComicStudioScreen(
             0 -> CharacterInksToolPanel(
                 selectedSketch = selectedSketch,
                 onSelectSketch = {
+                    undoRedoManager.recordSnapshot(takeSnapshot())
                     selectedSketch = it
                     activeCustomBitmap = null
                     activeSketchEntity = null
@@ -488,6 +706,7 @@ fun ComicStudioScreen(
                 onSnapCamera = triggerCameraSnap,
                 onPickGallery = triggerGalleryPick,
                 onSelectRoomSketch = { sketch ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
                     val file = File(sketch.imagePath)
                     if (file.exists()) {
                         val bmp = BitmapFactory.decodeFile(file.absolutePath)
@@ -513,32 +732,55 @@ fun ComicStudioScreen(
                     }
                 },
                 colorStyle = colorStyle,
-                onSelectColorStyle = { colorStyle = it },
+                onSelectColorStyle = {
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    colorStyle = it
+                },
                 characterColor = characterColor,
-                onSelectCharacterColor = { characterColor = it },
+                onSelectCharacterColor = {
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    characterColor = it
+                },
                 auraType = auraType,
-                onSelectAura = { auraType = it },
+                onSelectAura = {
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    auraType = it
+                },
                 inkingEdgeContrast = inkingEdgeContrast,
                 onInkingEdgeChanged = { inkingEdgeContrast = it },
                 isCleanPaperEnabled = isCleanPaperEnabled,
-                onToggleCleanPaper = { isCleanPaperEnabled = it }
+                onToggleCleanPaper = {
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    isCleanPaperEnabled = it
+                }
             )
             1 -> DialoguesAndSfxPanel(
                 speechBubbles = speechBubbles,
                 onAddBubble = { text, type ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    val newId = UUID.randomUUID().toString()
                     speechBubbles.add(
                         SpeechBubbleItem(
-                            id = UUID.randomUUID().toString(),
+                            id = newId,
                             text = text,
                             type = type,
                             xRatio = 0.35f,
-                            yRatio = 0.15f
+                            yRatio = 0.15f,
+                            scale = 1.0f
                         )
                     )
+                    selectedBubbleId = newId
                 },
-                onRemoveBubble = { id -> speechBubbles.removeAll { it.id == id } },
+                onRemoveBubble = { id ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    speechBubbles.removeAll { it.id == id }
+                    if (selectedBubbleId == id) {
+                        selectedBubbleId = null
+                    }
+                },
                 soundEffects = soundEffects,
                 onAddSfx = { text, hex ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
                     soundEffects.add(
                         SoundEffectItem(
                             id = UUID.randomUUID().toString(),
@@ -549,9 +791,38 @@ fun ComicStudioScreen(
                         )
                     )
                 },
-                onRemoveSfx = { id -> soundEffects.removeAll { it.id == id } }
+                onRemoveSfx = { id ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    soundEffects.removeAll { it.id == id }
+                }
             )
-            2 -> MotionCameraPanel(
+            2 -> StickersToolPanel(
+                stickers = stickers,
+                onAddSticker = { emoji, label, category ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    val newId = UUID.randomUUID().toString()
+                    stickers.add(
+                        StickerItem(
+                            id = newId,
+                            emojiOrIcon = emoji,
+                            label = label,
+                            category = category,
+                            xRatio = 0.5f,
+                            yRatio = 0.4f,
+                            scale = 1.1f
+                        )
+                    )
+                    selectedStickerId = newId
+                },
+                onRemoveSticker = { id ->
+                    undoRedoManager.recordSnapshot(takeSnapshot())
+                    stickers.removeAll { it.id == id }
+                    if (selectedStickerId == id) {
+                        selectedStickerId = null
+                    }
+                }
+            )
+            3 -> MotionCameraPanel(
                 animationMode = animationMode,
                 onSelectAnimationMode = {
                     animationMode = it
@@ -572,6 +843,119 @@ fun ComicStudioScreen(
             onExportSuccess = {
                 showExportDialog = false
                 Toast.makeText(context, "Animation exported! Saved to Motion Comics reel.", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    // Save Comic Panel State to Firestore Dialog
+    if (showSavePanelDialog) {
+        val defaultTitle = activeSketchEntity?.title ?: "The Tale of ${selectedSketch.replaceFirstChar { it.uppercase() }}"
+        SavePanelDialog(
+            initialTitle = defaultTitle,
+            sketchType = selectedSketch,
+            colorStyle = colorStyle,
+            speechBubblesCount = speechBubbles.size,
+            stickersCount = stickers.size,
+            isSaving = isSavingPanel,
+            onDismiss = { showSavePanelDialog = false },
+            onConfirmSave = { title ->
+                if (currentUserId == null) {
+                    showSavePanelDialog = false
+                    showSignInPrompt = true
+                } else {
+                    isSavingPanel = true
+                    coroutineScope.launch {
+                        try {
+                            val panelId = repository.saveComicPanelState(
+                                title = title,
+                                bitmap = activeCustomBitmap,
+                                sketchType = selectedSketch,
+                                colorStyle = colorStyle,
+                                characterColorHex = String.format("#%06X", (0xFFFFFF and characterColor.toArgb())),
+                                auraType = auraType,
+                                inkingEdgeContrast = inkingEdgeContrast,
+                                isCleanPaperEnabled = isCleanPaperEnabled,
+                                animationMode = animationMode,
+                                speechBubbles = speechBubbles.toList(),
+                                stickers = stickers.toList(),
+                                soundEffects = soundEffects.toList()
+                            )
+                            Toast.makeText(context, "Comic panel saved to Firestore!", Toast.LENGTH_SHORT).show()
+                            showSavePanelDialog = false
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Save failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        } finally {
+                            isSavingPanel = false
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    // Share / Export Finished Panel Image Dialog
+    if (showShareExportDialog) {
+        val defaultTitle = activeSketchEntity?.title ?: "Comic Panel: ${selectedSketch.replaceFirstChar { it.uppercase() }}"
+        ShareExportImageDialog(
+            initialTitle = defaultTitle,
+            sketchType = selectedSketch,
+            speechBubblesCount = speechBubbles.size,
+            stickersCount = stickers.size,
+            onDismiss = { showShareExportDialog = false },
+            onSaveToGallery = { title ->
+                coroutineScope.launch {
+                    try {
+                        val renderedBitmap = ComicPanelExporter.renderComicPanel(
+                            context = context,
+                            sketchType = selectedSketch,
+                            customBitmap = activeCustomBitmap,
+                            colorStyle = colorStyle,
+                            characterColor = characterColor,
+                            auraType = auraType,
+                            inkingEdgeContrast = inkingEdgeContrast,
+                            isCleanPaperEnabled = isCleanPaperEnabled,
+                            speechBubbles = speechBubbles.toList(),
+                            stickers = stickers.toList(),
+                            soundEffects = soundEffects.toList(),
+                            width = 1200,
+                            height = 1200
+                        )
+                        val uri = ComicPanelExporter.saveToGallery(context, renderedBitmap, title)
+                        if (uri != null) {
+                            Toast.makeText(context, "Comic panel saved to Gallery (Pictures/ComicCraft)!", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(context, "Exported image saved to gallery!", Toast.LENGTH_SHORT).show()
+                        }
+                        showShareExportDialog = false
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
+            onShare = { title ->
+                coroutineScope.launch {
+                    try {
+                        val renderedBitmap = ComicPanelExporter.renderComicPanel(
+                            context = context,
+                            sketchType = selectedSketch,
+                            customBitmap = activeCustomBitmap,
+                            colorStyle = colorStyle,
+                            characterColor = characterColor,
+                            auraType = auraType,
+                            inkingEdgeContrast = inkingEdgeContrast,
+                            isCleanPaperEnabled = isCleanPaperEnabled,
+                            speechBubbles = speechBubbles.toList(),
+                            stickers = stickers.toList(),
+                            soundEffects = soundEffects.toList(),
+                            width = 1200,
+                            height = 1200
+                        )
+                        ComicPanelExporter.shareComicPanel(context, renderedBitmap, title)
+                        showShareExportDialog = false
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Share failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         )
     }
@@ -670,6 +1054,21 @@ fun ComicStudioScreen(
                         Toast.makeText(context, "Failed to save sketch: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
+            }
+        )
+    }
+
+    // CameraX Direct Viewfinder & Capture
+    if (showCameraXViewfinder) {
+        CameraXCaptureDialog(
+            onDismiss = { showCameraXViewfinder = false },
+            onPhotoCaptured = { bitmap ->
+                pendingCapturedBitmap = bitmap
+                pendingCaptureSource = "CAMERAX"
+                pendingSketchTitle = "Paper Sketch #${(System.currentTimeMillis() % 10000)}"
+                pendingDetectedSubject = "Pencil Character"
+                showCameraXViewfinder = false
+                showSnapDialog = true
             }
         )
     }
@@ -1057,6 +1456,31 @@ private fun DialoguesAndSfxPanel(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "💡 Interactive Bubble: Tap any speech bubble on the artwork to type text into it! Drag to move anywhere, or pinch / drag the corner handle to resize.",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
             Text(
                 text = "Add Dialogue Balloon",
                 fontWeight = FontWeight.Bold,
@@ -1167,6 +1591,59 @@ private fun DialoguesAndSfxPanel(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(sfxText, fontWeight = FontWeight.Black, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StickersToolPanel(
+    stickers: List<StickerItem>,
+    onAddSticker: (String, String, String) -> Unit,
+    onRemoveSticker: (String) -> Unit
+) {
+    Column {
+        StickerPickerTray(onAddSticker = onAddSticker)
+
+        if (stickers.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Active Stickers on Panel (${stickers.size})",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    stickers.forEach { sticker ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = sticker.emojiOrIcon, fontSize = 22.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "${sticker.label} (${(sticker.scale * 100).toInt()}%)",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            IconButton(onClick = { onRemoveSticker(sticker.id) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Sticker", tint = Color.Red)
+                            }
+                        }
                     }
                 }
             }
@@ -1547,4 +2024,266 @@ fun SnapSketchConfirmationDialog(
         }
     }
 }
+
+@Composable
+fun SavePanelDialog(
+    initialTitle: String,
+    sketchType: String,
+    colorStyle: String,
+    speechBubblesCount: Int,
+    stickersCount: Int,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onConfirmSave: (title: String) -> Unit
+) {
+    var title by remember { mutableStateOf(initialTitle) }
+
+    Dialog(onDismissRequest = { if (!isSaving) onDismiss() }) {
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "Save Panel to Cloud",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Saves your current comic panel state—including base image, lineart settings, speech bubbles, and stickers—to Firebase Firestore.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Panel Scene Title") },
+                    placeholder = { Text("e.g. Hero's Awakening") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isSaving
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Panel summary chip list
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = "Included in Firestore payload:",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "• Base Sketch: $sketchType ($colorStyle)\n• Speech Bubbles: $speechBubblesCount dialogue balloons\n• Stickers: $stickersCount child-friendly props",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { onConfirmSave(title) },
+                    enabled = !isSaving && title.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Saving to Firestore...")
+                    } else {
+                        Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Confirm & Save to Firestore")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = onDismiss,
+                    enabled = !isSaving,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShareExportImageDialog(
+    initialTitle: String,
+    sketchType: String,
+    speechBubblesCount: Int,
+    stickersCount: Int,
+    onDismiss: () -> Unit,
+    onSaveToGallery: (title: String) -> Unit,
+    onShare: (title: String) -> Unit
+) {
+    var title by remember { mutableStateOf(initialTitle) }
+    var isProcessing by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = { if (!isProcessing) onDismiss() }) {
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "Export Finished Panel",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Export your finished comic panel as a high-quality 1200x1200px PNG image with all speech bubbles, stickers, and lineart styling.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Artwork / Panel Title") },
+                    placeholder = { Text("e.g. Hero's Final Stand") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isProcessing
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Quality Badge Card
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Export Format: 1200x1200 HD PNG (Lossless)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "• Base Sketch: $sketchType\n• Speech Bubbles: $speechBubblesCount dialogue elements\n• Stickers: $stickersCount pop-art props\n• Location: Pictures/ComicCraft",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (isProcessing) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Rendering high-res panel...", fontSize = 13.sp)
+                    }
+                } else {
+                    // Save to Gallery Button
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            onSaveToGallery(title)
+                        },
+                        enabled = title.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("confirm_save_gallery_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Save to Device Gallery")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // System Share Button
+                    OutlinedButton(
+                        onClick = {
+                            isProcessing = true
+                            onShare(title)
+                        },
+                        enabled = title.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("confirm_share_sheet_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Share via App (Instagram / Discord)")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isProcessing,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+    }
+}
+
+
 

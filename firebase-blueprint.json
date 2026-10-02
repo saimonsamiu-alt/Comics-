@@ -108,6 +108,26 @@
         "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
       },
       "required": ["title", "ownerId", "ownerName", "status", "currentPanelScript", "updatedAt"]
+    },
+    "SavedPanel": {
+      "title": "SavedPanel",
+      "description": "User saved comic panel state containing base image, speech bubbles, stickers and effects",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID of creator" },
+        "title": { "type": "string", "description": "Panel title or scene label" },
+        "baseImage": { "type": "string", "description": "Base image data URI or reference key" },
+        "sketchType": { "type": "string", "description": "Underlying sketch type or custom indicator" },
+        "colorStyle": { "type": "string", "description": "Comic art color grading style" },
+        "characterColor": { "type": "string", "description": "Character tint hex" },
+        "auraType": { "type": "string", "description": "Aura effect type" },
+        "inkingEdgeContrast": { "type": "number", "description": "Line ink edge contrast" },
+        "isCleanPaperEnabled": { "type": "boolean", "description": "Whether clean paper matting is active" },
+        "animationMode": { "type": "string", "description": "Motion animation mode" },
+        "panelsJson": { "type": "string", "description": "Serialized speech bubbles and stickers list" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["userId", "title", "baseImage", "updatedAt"]
     }
   },
   "firestore": {
@@ -130,6 +150,10 @@
     "/users/{userId}/bookmarks/{comicId}": {
       "schema": { "$ref": "#/entities/Bookmark" },
       "description": "User personalized bookmarks and sync progress"
+    },
+    "/users/{userId}/saved_panels/{panelId}": {
+      "schema": { "$ref": "#/entities/SavedPanel" },
+      "description": "User saved comic panels with hand-drawn base image, speech bubbles and stickers"
     },
     "/feed_posts/{postId}": {
       "schema": { "$ref": "#/entities/FeedPost" },

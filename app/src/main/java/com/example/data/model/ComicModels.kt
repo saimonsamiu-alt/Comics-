@@ -169,7 +169,8 @@ data class ComicPanelItem(
     val sketchTitle: String = "Hand-drawn Character",
     val colorStyle: String = "Vibrant Cel-Shaded",
     val speechBubbles: List<SpeechBubbleItem> = emptyList(),
-    val soundEffects: List<SoundEffectItem> = emptyList()
+    val soundEffects: List<SoundEffectItem> = emptyList(),
+    val stickers: List<StickerItem> = emptyList()
 )
 
 data class SpeechBubbleItem(
@@ -177,7 +178,8 @@ data class SpeechBubbleItem(
     val text: String = "Hello!",
     val type: String = "Speech", // Speech, Thought, Shout, Whisper
     val xRatio: Float = 0.5f,
-    val yRatio: Float = 0.2f
+    val yRatio: Float = 0.2f,
+    val scale: Float = 1.0f
 )
 
 data class SoundEffectItem(
@@ -186,4 +188,34 @@ data class SoundEffectItem(
     val colorHex: String = "#FF5722",
     val xRatio: Float = 0.5f,
     val yRatio: Float = 0.5f
+)
+
+data class StickerItem(
+    val id: String = "",
+    val emojiOrIcon: String = "⭐",
+    val label: String = "Star",
+    val category: String = "Power", // Power, Animal, Gear, Fun
+    val xRatio: Float = 0.5f,
+    val yRatio: Float = 0.5f,
+    val scale: Float = 1.0f,
+    val rotation: Float = 0f
+)
+
+data class SavedComicPanelState(
+    val id: String = "",
+    val userId: String = "",
+    val title: String = "Comic Scene Panel",
+    val baseImage: String = "",
+    val sketchType: String = "dog",
+    val colorStyle: String = "Vibrant Cel-Shaded",
+    val characterColor: String = "#FDCB6E",
+    val auraType: String = "Sparkle",
+    val inkingEdgeContrast: Float = 0.85f,
+    val isCleanPaperEnabled: Boolean = true,
+    val animationMode: String = "Camera Pan & Zoom",
+    val panelsJson: String = "",
+    val speechBubbles: List<SpeechBubbleItem> = emptyList(),
+    val stickers: List<StickerItem> = emptyList(),
+    val soundEffects: List<SoundEffectItem> = emptyList(),
+    @ServerTimestamp val updatedAt: Timestamp? = null
 )

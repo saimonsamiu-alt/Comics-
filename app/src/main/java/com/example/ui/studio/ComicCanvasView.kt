@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SoundEffectItem
 import com.example.data.model.SpeechBubbleItem
+import com.example.data.model.StickerItem
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -63,12 +64,24 @@ fun ComicPanelCanvas(
     auraType: String = "Sparkle", // None, Flame, Sparkle, Lightning
     speechBubbles: List<SpeechBubbleItem> = emptyList(),
     soundEffects: List<SoundEffectItem> = emptyList(),
+    stickers: List<StickerItem> = emptyList(),
     isAnimating: Boolean = false,
     animationMode: String = "Camera Pan & Zoom", // "Camera Pan & Zoom", "Action Shake", "Pulse Life"
     customBitmap: android.graphics.Bitmap? = null,
     inkingEdgeContrast: Float = 0.85f,
     isCleanPaperEnabled: Boolean = true,
-    onBubblePositionChanged: ((String, Float, Float) -> Unit)? = null
+    selectedBubbleId: String? = null,
+    onSelectBubble: ((String) -> Unit)? = null,
+    onBubblePositionChanged: ((String, Float, Float) -> Unit)? = null,
+    onBubbleScaleChanged: ((String, Float) -> Unit)? = null,
+    onBubbleTextChanged: ((String, String) -> Unit)? = null,
+    onBubbleDeleted: ((String) -> Unit)? = null,
+    selectedStickerId: String? = null,
+    onSelectSticker: ((String) -> Unit)? = null,
+    onStickerPositionChanged: ((String, Float, Float) -> Unit)? = null,
+    onStickerScaleChanged: ((String, Float) -> Unit)? = null,
+    onStickerRotateChanged: ((String, Float) -> Unit)? = null,
+    onStickerDeleted: ((String) -> Unit)? = null
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "comic_anim")
 
@@ -184,29 +197,29 @@ fun ComicPanelCanvas(
             drawComicHalftoneBorder(size)
         }
 
-        // Speech Bubbles Overlay
+        // Speech Bubbles Overlay (Movable, Resizable, and Tap-to-Type)
         speechBubbles.forEach { bubble ->
-            Box(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .align(Alignment.TopStart)
-                    .offset {
-                        IntOffset(
-                            (bubble.xRatio * 700).roundToInt(),
-                            (bubble.yRatio * 800).roundToInt()
-                        )
-                    }
-                    .pointerInput(bubble.id) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val newX = ((bubble.xRatio * 700 + dragAmount.x) / 700f).coerceIn(0.05f, 0.85f)
-                            val newY = ((bubble.yRatio * 800 + dragAmount.y) / 800f).coerceIn(0.05f, 0.85f)
-                            onBubblePositionChanged?.invoke(bubble.id, newX, newY)
-                        }
-                    }
-            ) {
-                ComicSpeechBubbleView(bubble = bubble)
-            }
+            val isSelected = selectedBubbleId == bubble.id
+            MovableResizableSpeechBubble(
+                bubble = bubble,
+                isSelected = isSelected,
+                canvasWidthPx = 700f,
+                canvasHeightPx = 800f,
+                onSelect = { onSelectBubble?.invoke(bubble.id) },
+                onPositionChanged = { newX, newY ->
+                    onBubblePositionChanged?.invoke(bubble.id, newX, newY)
+                },
+                onScaleChanged = { newScale ->
+                    onBubbleScaleChanged?.invoke(bubble.id, newScale)
+                },
+                onTextChanged = { newText ->
+                    onBubbleTextChanged?.invoke(bubble.id, newText)
+                },
+                onDelete = {
+                    onBubbleDeleted?.invoke(bubble.id)
+                },
+                modifier = Modifier.align(Alignment.TopStart)
+            )
         }
 
         // Sound Effects (POW, BAM, WHOOSH)
@@ -224,6 +237,31 @@ fun ComicPanelCanvas(
             ) {
                 ComicSoundEffectView(sfx = sfx, isAnimated = isAnimating)
             }
+        }
+
+        // Stickers Overlay (Child-Friendly Movable, Resizable, Rotatable Badges)
+        stickers.forEach { sticker ->
+            val isSelected = selectedStickerId == sticker.id
+            MovableResizableSticker(
+                sticker = sticker,
+                isSelected = isSelected,
+                canvasWidthPx = 700f,
+                canvasHeightPx = 800f,
+                onSelect = { onSelectSticker?.invoke(sticker.id) },
+                onPositionChanged = { newX, newY ->
+                    onStickerPositionChanged?.invoke(sticker.id, newX, newY)
+                },
+                onScaleChanged = { newScale ->
+                    onStickerScaleChanged?.invoke(sticker.id, newScale)
+                },
+                onRotateChanged = { newRot ->
+                    onStickerRotateChanged?.invoke(sticker.id, newRot)
+                },
+                onDelete = {
+                    onStickerDeleted?.invoke(sticker.id)
+                },
+                modifier = Modifier.align(Alignment.TopStart)
+            )
         }
     }
 }
@@ -558,35 +596,13 @@ private fun DrawScope.drawComicHalftoneBorder(size: Size) {
 
 @Composable
 fun ComicSpeechBubbleView(bubble: SpeechBubbleItem) {
-    val bubbleColor = when (bubble.type) {
-        "Shout" -> Color(0xFFFFF275)
-        "Thought" -> Color(0xFFF0F3FF)
-        "Whisper" -> Color(0xFFFAFAFA)
-        else -> Color.White
-    }
-
-    val bubbleShape = when (bubble.type) {
-        "Thought" -> RoundedCornerShape(28.dp)
-        "Shout" -> RoundedCornerShape(4.dp)
-        else -> RoundedCornerShape(16.dp)
-    }
-
-    Surface(
-        color = bubbleColor,
-        shape = bubbleShape,
-        shadowElevation = 6.dp,
-        modifier = Modifier
-            .border(2.5.dp, Color.Black, bubbleShape)
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = bubble.text,
-            color = Color.Black,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.SansSerif
-        )
-    }
+    SpeechBubble(
+        text = bubble.text,
+        type = bubble.type,
+        scale = if (bubble.scale <= 0f) 1.0f else bubble.scale,
+        onTextChanged = {},
+        isEditable = false
+    )
 }
 
 @Composable

@@ -19,11 +19,17 @@ import com.example.data.model.Comic
 import com.example.data.model.Comment
 import com.example.data.model.FeedPost
 import com.example.data.model.Rating
+import com.example.data.model.SavedComicPanelState
+import com.example.data.model.SoundEffectItem
+import com.example.data.model.SpeechBubbleItem
+import com.example.data.model.StickerItem
 import com.example.data.sample.SampleComicsData
 import com.example.data.util.OperationType
 import com.example.data.util.handleFirestoreError
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -38,6 +44,11 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import android.graphics.Bitmap
+import android.util.Base64
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 
 class ComicRepository(
     private val firestore: FirebaseFirestore,
@@ -570,5 +581,229 @@ class ComicRepository(
             handleFirestoreError(e, OperationType.UPDATE, "collaborations/$collabId")
             throw e
         }
+    }
+
+    // --- Saved Comic Panels (Firestore Cloud Storage for base image, bubbles, and stickers) ---
+    suspend fun saveComicPanelState(
+        title: String,
+        bitmap: Bitmap?,
+        sketchType: String,
+        colorStyle: String,
+        characterColorHex: String,
+        auraType: String,
+        inkingEdgeContrast: Float,
+        isCleanPaperEnabled: Boolean,
+        animationMode: String,
+        speechBubbles: List<SpeechBubbleItem>,
+        stickers: List<StickerItem>,
+        soundEffects: List<SoundEffectItem>
+    ): String = withContext(Dispatchers.IO) {
+        val uid = requireUserId()
+        val docRef = firestore.collection("users").document(uid).collection("saved_panels").document()
+
+        // Encode base image to compact base64 data URI if bitmap provided, or built-in reference
+        val baseImageString = if (bitmap != null) {
+            val stream = ByteArrayOutputStream()
+            val maxDim = 512
+            val scaledBitmap = if (bitmap.width > maxDim || bitmap.height > maxDim) {
+                val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+                val targetW = if (ratio > 1f) maxDim else (maxDim * ratio).toInt()
+                val targetH = if (ratio > 1f) (maxDim / ratio).toInt() else maxDim
+                Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
+            } else {
+                bitmap
+            }
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, stream)
+            val base64 = Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+            "data:image/jpeg;base64,$base64"
+        } else {
+            "builtin:$sketchType"
+        }
+
+        // Build serialized JSON array of speech bubbles
+        val bubblesArray = JSONArray()
+        speechBubbles.forEach { b ->
+            val obj = JSONObject().apply {
+                put("id", b.id)
+                put("text", b.text)
+                put("type", b.type)
+                put("xRatio", b.xRatio.toDouble())
+                put("yRatio", b.yRatio.toDouble())
+                put("scale", b.scale.toDouble())
+            }
+            bubblesArray.put(obj)
+        }
+
+        // Build serialized JSON array of stickers
+        val stickersArray = JSONArray()
+        stickers.forEach { s ->
+            val obj = JSONObject().apply {
+                put("id", s.id)
+                put("emojiOrIcon", s.emojiOrIcon)
+                put("label", s.label)
+                put("category", s.category)
+                put("xRatio", s.xRatio.toDouble())
+                put("yRatio", s.yRatio.toDouble())
+                put("scale", s.scale.toDouble())
+                put("rotation", s.rotation.toDouble())
+            }
+            stickersArray.put(obj)
+        }
+
+        // Build serialized JSON array of sound effects
+        val sfxArray = JSONArray()
+        soundEffects.forEach { sfx ->
+            val obj = JSONObject().apply {
+                put("id", sfx.id)
+                put("text", sfx.text)
+                put("colorHex", sfx.colorHex)
+                put("xRatio", sfx.xRatio.toDouble())
+                put("yRatio", sfx.yRatio.toDouble())
+            }
+            sfxArray.put(obj)
+        }
+
+        val panelsContainer = JSONObject().apply {
+            put("bubbles", bubblesArray)
+            put("stickers", stickersArray)
+            put("soundEffects", sfxArray)
+        }
+        val panelsJson = panelsContainer.toString()
+
+        val payload = mapOf(
+            "userId" to uid,
+            "title" to title.ifBlank { "Comic Scene Panel" },
+            "baseImage" to baseImageString,
+            "sketchType" to sketchType,
+            "colorStyle" to colorStyle,
+            "characterColor" to characterColorHex,
+            "auraType" to auraType,
+            "inkingEdgeContrast" to inkingEdgeContrast.toDouble(),
+            "isCleanPaperEnabled" to isCleanPaperEnabled,
+            "animationMode" to animationMode,
+            "panelsJson" to panelsJson,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+        try {
+            docRef.set(payload).await()
+            docRef.id
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.CREATE, "users/$uid/saved_panels")
+            throw e
+        }
+    }
+
+    fun observeSavedPanels(): Flow<List<SavedComicPanelState>> = flow {
+        val uid = userIdProvider() ?: return@flow
+        val path = "users/$uid/saved_panels"
+        emitAll(
+            firestore.collection("users").document(uid).collection("saved_panels")
+                .orderBy("updatedAt", Query.Direction.DESCENDING)
+                .snapshots()
+                .map { snapshot ->
+                    snapshot.documents.mapNotNull { doc ->
+                        parseSavedPanelDoc(doc)
+                    }
+                }
+                .catch { error ->
+                    if (error is Exception) handleFirestoreError(error, OperationType.LIST, path)
+                    throw error
+                }
+        )
+    }.flowOn(Dispatchers.IO)
+
+    suspend fun deleteSavedPanel(panelId: String) {
+        val uid = requireUserId()
+        try {
+            firestore.collection("users").document(uid).collection("saved_panels").document(panelId).delete().await()
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.DELETE, "users/$uid/saved_panels/$panelId")
+            throw e
+        }
+    }
+
+    private fun parseSavedPanelDoc(doc: DocumentSnapshot): SavedComicPanelState? {
+        val data = doc.data ?: return null
+        val bubblesList = mutableListOf<SpeechBubbleItem>()
+        val stickersList = mutableListOf<StickerItem>()
+        val sfxList = mutableListOf<SoundEffectItem>()
+
+        val panelsJsonStr = data["panelsJson"] as? String ?: ""
+        if (panelsJsonStr.isNotBlank()) {
+            try {
+                val json = JSONObject(panelsJsonStr)
+                val bubblesArr = json.optJSONArray("bubbles")
+                if (bubblesArr != null) {
+                    for (i in 0 until bubblesArr.length()) {
+                        val obj = bubblesArr.getJSONObject(i)
+                        bubblesList.add(
+                            SpeechBubbleItem(
+                                id = obj.optString("id", "sb_$i"),
+                                text = obj.optString("text", ""),
+                                type = obj.optString("type", "Speech"),
+                                xRatio = obj.optDouble("xRatio", 0.5).toFloat(),
+                                yRatio = obj.optDouble("yRatio", 0.2).toFloat(),
+                                scale = obj.optDouble("scale", 1.0).toFloat()
+                            )
+                        )
+                    }
+                }
+
+                val stickersArr = json.optJSONArray("stickers")
+                if (stickersArr != null) {
+                    for (i in 0 until stickersArr.length()) {
+                        val obj = stickersArr.getJSONObject(i)
+                        stickersList.add(
+                            StickerItem(
+                                id = obj.optString("id", "stk_$i"),
+                                emojiOrIcon = obj.optString("emojiOrIcon", "⭐"),
+                                label = obj.optString("label", "Star"),
+                                category = obj.optString("category", "Power"),
+                                xRatio = obj.optDouble("xRatio", 0.5).toFloat(),
+                                yRatio = obj.optDouble("yRatio", 0.5).toFloat(),
+                                scale = obj.optDouble("scale", 1.0).toFloat(),
+                                rotation = obj.optDouble("rotation", 0.0).toFloat()
+                            )
+                        )
+                    }
+                }
+
+                val sfxArr = json.optJSONArray("soundEffects")
+                if (sfxArr != null) {
+                    for (i in 0 until sfxArr.length()) {
+                        val obj = sfxArr.getJSONObject(i)
+                        sfxList.add(
+                            SoundEffectItem(
+                                id = obj.optString("id", "sfx_$i"),
+                                text = obj.optString("text", "POW!"),
+                                colorHex = obj.optString("colorHex", "#FF5722"),
+                                xRatio = obj.optDouble("xRatio", 0.5).toFloat(),
+                                yRatio = obj.optDouble("yRatio", 0.5).toFloat()
+                            )
+                        )
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        return SavedComicPanelState(
+            id = doc.id,
+            userId = data["userId"] as? String ?: "",
+            title = data["title"] as? String ?: "Comic Panel",
+            baseImage = data["baseImage"] as? String ?: "",
+            sketchType = data["sketchType"] as? String ?: "dog",
+            colorStyle = data["colorStyle"] as? String ?: "Vibrant Cel-Shaded",
+            characterColor = data["characterColor"] as? String ?: "#FDCB6E",
+            auraType = data["auraType"] as? String ?: "Sparkle",
+            inkingEdgeContrast = (data["inkingEdgeContrast"] as? Number)?.toFloat() ?: 0.85f,
+            isCleanPaperEnabled = data["isCleanPaperEnabled"] as? Boolean ?: true,
+            animationMode = data["animationMode"] as? String ?: "Camera Pan & Zoom",
+            panelsJson = panelsJsonStr,
+            speechBubbles = bubblesList,
+            stickers = stickersList,
+            soundEffects = sfxList,
+            updatedAt = data["updatedAt"] as? Timestamp
+        )
     }
 }

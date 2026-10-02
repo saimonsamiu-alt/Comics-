@@ -87,6 +87,20 @@ service cloud.firestore {
              (!('collaboratorIds' in data) || (data.collaboratorIds is string && data.collaboratorIds.size() <= 1000));
     }
 
+    function isValidSavedPanel(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.baseImage is string && data.baseImage.size() <= 500000 &&
+             (!('sketchType' in data) || (data.sketchType is string && data.sketchType.size() <= 100)) &&
+             (!('colorStyle' in data) || (data.colorStyle is string && data.colorStyle.size() <= 100)) &&
+             (!('characterColor' in data) || (data.characterColor is string && data.characterColor.size() <= 50)) &&
+             (!('auraType' in data) || (data.auraType is string && data.auraType.size() <= 50)) &&
+             (!('inkingEdgeContrast' in data) || data.inkingEdgeContrast is number) &&
+             (!('isCleanPaperEnabled' in data) || data.isCleanPaperEnabled is bool) &&
+             (!('animationMode' in data) || (data.animationMode is string && data.animationMode.size() <= 100)) &&
+             (!('panelsJson' in data) || (data.panelsJson is string && data.panelsJson.size() <= 500000));
+    }
+
     // Comics collection
     match /comics/{comicId} {
       allow get, list: if true;
@@ -201,6 +215,23 @@ service cloud.firestore {
 
       allow delete: if isSignedIn() &&
                        isValidId(comicId) &&
+                       request.auth.uid == userId;
+    }
+
+    // User saved comic panels (including base image, speech bubbles, stickers)
+    match /users/{userId}/saved_panels/{panelId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create, update: if isSignedIn() &&
+                               isValidId(panelId) &&
+                               request.auth.uid == userId &&
+                               incoming().userId == userId &&
+                               incoming().updatedAt is timestamp &&
+                               incoming().updatedAt <= request.time &&
+                               isValidSavedPanel(incoming());
+
+      allow delete: if isSignedIn() &&
+                       isValidId(panelId) &&
                        request.auth.uid == userId;
     }
 

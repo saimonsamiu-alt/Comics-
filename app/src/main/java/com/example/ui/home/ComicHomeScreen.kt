@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
@@ -57,10 +58,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.R
 import com.example.data.model.Comic
 import com.example.data.repository.ComicRepository
 import com.example.data.sample.SampleComicsData
+import com.example.ui.profile.IOSCrossPlatformCard
 import com.example.ui.studio.ComicPanelCanvas
 import kotlinx.coroutines.flow.collectLatest
 
@@ -75,6 +78,7 @@ fun ComicHomeScreen(
     val cloudComics = remember { mutableStateListOf<Comic>() }
     var selectedGenre by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
+    var showIosDialog by remember { mutableStateOf(false) }
 
     // Observe published comics from Firestore
     LaunchedEffect(Unit) {
@@ -165,7 +169,51 @@ fun ComicHomeScreen(
                     onStudioClicked = onOpenStudio
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // iOS / iPhone Quick Access Banner
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showIosDialog = true }
+                        .testTag("home_ios_access_banner"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Default.PhoneIphone,
+                                contentDescription = "iOS Access",
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "iPhone / iPad-এ ব্যবহার করবেন?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "Safari দিয়ে Add to Home Screen করে সহজে ইনস্টল করুন ➔",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Search Bar
                 OutlinedTextField(
@@ -232,6 +280,12 @@ fun ComicHomeScreen(
                 Icon(Icons.Default.Create, contentDescription = "Create Comic")
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("Draw / Studio", fontWeight = FontWeight.Bold)
+            }
+        }
+
+        if (showIosDialog) {
+            Dialog(onDismissRequest = { showIosDialog = false }) {
+                IOSCrossPlatformCard()
             }
         }
     }
