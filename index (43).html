@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComicCraft - Make your own comic!</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FFFDF5;--ink:#1B1B2F;--yellow:#FFD23F;--pink:#FF5D8F;--sky:#3EC1F3;--mint:#4FD6A5}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Comic Neue","Comic Sans MS",system-ui,sans-serif;font-weight:700;color:var(--ink);background:var(--paper);background-image:radial-gradient(rgba(62,193,243,.28) 1.5px,transparent 1.6px);background-size:16px 16px}
+header{padding:14px 16px 4px;text-align:center}
+h1{font-family:Bangers,Impact,sans-serif;font-size:clamp(2.2rem,8vw,3.6rem);margin:0;letter-spacing:2px;color:var(--pink);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
+h2{font-family:Bangers,Impact,sans-serif;font-size:1.5rem;margin:0 0 8px;letter-spacing:1px}
+main{max-width:980px;margin:0 auto;padding:8px 12px 40px}
+.bar{background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);padding:10px 12px;margin:12px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,label.btn{font:inherit;font-size:1.05rem;min-height:48px;min-width:48px;padding:6px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--yellow);color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--ink);display:inline-flex;align-items:center;gap:6px}
+button:active,label.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+button:focus-visible,label.btn:focus-within,input:focus-visible{outline:4px solid var(--sky);outline-offset:2px}
+button.on{background:var(--sky)}
+button.big{background:var(--mint);font-size:1.3rem}
+.sw{width:44px;height:44px;border-radius:50%;padding:0;box-shadow:2px 2px 0 var(--ink)}
+.sw.on{outline:4px solid var(--ink);outline-offset:2px}
+input[type=range]{width:120px;height:32px;accent-color:var(--pink)}
+#board{display:grid;gap:12px;background:var(--ink);padding:12px;border:3px solid var(--ink);border-radius:8px;box-shadow:6px 6px 0 var(--pink)}
+.panel{position:relative;background:#fff;aspect-ratio:1;container-type:inline-size;overflow:hidden;touch-action:none}
+.panel.active{outline:6px solid var(--yellow);outline-offset:-6px}
+.panel canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.item{position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;touch-action:none}
+.item.sticker{font-size:12cqw;line-height:1}
+.item.bubble{font-size:4.5cqw;background:#fff;border:.7cqw solid var(--ink);padding:1.6cqw 3cqw;max-width:50cqw;text-align:center;border-radius:3cqw;line-height:1.2}
+.item.bubble.thought{border-radius:50%}
+.item .x{position:absolute;right:-3cqw;top:-3cqw;width:6cqw;height:6cqw;min-width:0;min-height:0;padding:0;border-radius:50%;background:var(--pink);font-size:3.5cqw;box-shadow:none;display:none;justify-content:center}
+.item.sel .x{display:flex}
+.hint{margin:6px 0 0;font-size:.95rem}
+@media (prefers-reduced-motion:no-preference){.pop{animation:pop .25s}@keyframes pop{from{transform:translate(-50%,-50%) scale(.3)}}}
+</style>
+</head>
+<body>
+<header><h1>ComicCraft</h1><p style="margin:4px 0">Draw. Talk. Share. Make your own comic!</p></header>
+<main>
+<section class="bar" aria-label="Pick a page">
+<h2>1. Pick your page</h2>
+<div class="row" id="layouts">
+<button data-l="1" class="on">1 big picture</button><button data-l="2">2 pictures</button><button data-l="3">3 strip</button><button data-l="4">4 grid</button>
+</div></section>
+
+<div id="board" aria-label="Your comic"></div>
+<p class="hint">Tap a picture box to draw in it. Tap a sticker or bubble to move it.</p>
+
+<section class="bar">
+<h2>2. Draw</h2>
+<div class="row">
+<button id="pen" class="on">✏️ Pen</button><button id="eraser">🧽 Eraser</button>
+<span class="row" id="colors"></span>
+<input id="size" type="range" min="2" max="40" value="8" aria-label="Pen size">
+<button id="undo">↩️ Undo</button><button id="clear">🗑️ Clear box</button>
+</div>
+<div class="row" style="margin-top:8px">
+<label class="btn">📷 Photo of my drawing<input id="file" type="file" accept="image/*" hidden></label>
+<button id="ink">✨ Make it comic-ink</button>
+</div></section>
+
+<section class="bar">
+<h2>3. Add words and stickers</h2>
+<div class="row">
+<button id="speech">💬 Say it</button><button id="thought">💭 Think it</button>
+<span class="row" id="stickers"></span>
+</div></section>
+
+<section class="bar"><div class="row"><button id="save" class="big">⬇️ Save my comic</button></div></section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), COLORS=["#1B1B2F","#FF5D8F","#3EC1F3","#FFD23F","#4FD6A5","#8A5CF6","#FF8A3D","#FFFFFF"];
+const STICKERS=["💥","⭐","❤️","😂","😱","🔥","🦸","🐱"], LAY={1:[1,1],2:[2,1],3:[1,3],4:[2,2]};
+let cur=1, panels=[], active=0, color=COLORS[0], tool="pen", size=8;
+const S=400;
+
+function build(n){
+  cur=n; const [c,r]=LAY[n], b=$("#board"); b.innerHTML=""; panels=[]; active=0;
+  b.style.gridTemplateColumns=`repeat(${c},1fr)`;
+  b.style.maxWidth=(c===1&&r===1?560:c===1?460:900)+"px"; b.style.margin="0 auto";
+  for(let i=0;i<n;i++){
+    const el=document.createElement("div"); el.className="panel"; const cv=document.createElement("canvas");
+    cv.width=cv.height=S; el.append(cv); b.append(el);
+    const p={el,cv,ctx:cv.getContext("2d"),hist:[]}; panels.push(p);
+    el.addEventListener("pointerdown",()=>select(i));
+    draw(p);
+  }
+  select(0);
+}
+function select(i){active=i;panels.forEach((p,k)=>p.el.classList.toggle("active",k===i))}
+function snap(p){p.hist.push(p.ctx.getImageData(0,0,S,S));if(p.hist.length>25)p.hist.shift()}
+
+function draw(p){
+  const cv=p.cv; let down=false,last;
+  const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*S/r.width,(e.clientY-r.top)*S/r.height]};
+  cv.addEventListener("pointerdown",e=>{down=true;cv.setPointerCapture(e.pointerId);snap(p);last=pos(e);dot(p,last,last)});
+  cv.addEventListener("pointermove",e=>{if(!down)return;const n=pos(e);dot(p,last,n);last=n});
+  ["pointerup","pointercancel"].forEach(t=>cv.addEventListener(t,()=>down=false));
+}
+function dot(p,a,b){
+  const x=p.ctx; x.lineCap=x.lineJoin="round"; x.lineWidth=size;
+  x.globalCompositeOperation=tool==="eraser"?"destination-out":"source-over"; x.strokeStyle=color;
+  x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0]+.01,b[1]);x.stroke();
+}
+
+// colors, stickers
+COLORS.forEach((c,i)=>{const b=document.createElement("button");b.className="sw"+(i?"":" on");b.style.background=c;b.setAttribute("aria-label","Color "+(i+1));
+  b.onclick=()=>{color=c;tool="pen";setTool();document.querySelectorAll(".sw").forEach(s=>s.classList.toggle("on",s===b))};$("#colors").append(b)});
+STICKERS.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.setAttribute("aria-label","Add sticker "+s);b.onclick=()=>addItem("sticker",s);$("#stickers").append(b)});
+function setTool(){$("#pen").classList.toggle("on",tool==="pen");$("#eraser").classList.toggle("on",tool==="eraser")}
+$("#pen").onclick=()=>{tool="pen";setTool()}; $("#eraser").onclick=()=>{tool="eraser";setTool()};
+$("#size").oninput=e=>size=+e.target.value;
+$("#undo").onclick=()=>{const p=panels[active],h=p.hist.pop();if(h)p.ctx.putImageData(h,0,0)};
+$("#clear").onclick=()=>{const p=panels[active];snap(p);p.ctx.clearRect(0,0,S,S);p.el.querySelectorAll(".item").forEach(i=>i.remove())};
+document.querySelectorAll("#layouts button").forEach(b=>b.onclick=()=>{
+  if(panels.some(p=>p.hist.length||p.el.querySelector(".item"))&&!confirm("Start a new page? Your current comic will be erased."))return;
+  document.querySelectorAll("#layouts button").forEach(x=>x.classList.toggle("on",x===b));build(+b.dataset.l)});
+
+// bubbles & stickers
+function addItem(kind,text){
+  const p=panels[active], it=document.createElement("div");
+  it.className="item pop "+(kind==="sticker"?"sticker":"bubble "+kind); it.dataset.kind=kind;
+  it.style.left="50%";it.style.top="50%";
+  const t=document.createElement("span");t.textContent=text;it.append(t);
+  const x=document.createElement("button");x.className="x";x.textContent="✖";x.setAttribute("aria-label","Delete");
+  x.onpointerdown=e=>{e.stopPropagation();it.remove()};it.append(x);
+  let drag=false,moved=false,box;
+  it.onpointerdown=e=>{drag=true;moved=false;box=p.el.getBoundingClientRect();it.setPointerCapture(e.pointerId);
+    document.querySelectorAll(".item").forEach(i=>i.classList.remove("sel"));it.classList.add("sel")};
+  it.onpointermove=e=>{if(!drag)return;moved=true;
+    it.style.left=Math.min(100,Math.max(0,(e.clientX-box.left)/box.width*100))+"%";
+    it.style.top=Math.min(100,Math.max(0,(e.clientY-box.top)/box.height*100))+"%"};
+  it.onpointerup=()=>{drag=false;if(!moved&&kind!=="sticker"){const v=prompt("What do they say?",t.textContent);if(v)t.textContent=v}};
+  p.el.append(it);
+}
+$("#speech").onclick=()=>{const v=prompt("What do they say?","Hello!");if(v)addItem("speech",v)};
+$("#thought").onclick=()=>{const v=prompt("What do they think?","Hmm...");if(v)addItem("thought",v)};
+
+// photo -> comic ink
+$("#file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const img=new Image();
+  img.onload=()=>{const p=panels[active];snap(p);const k=Math.max(S/img.width,S/img.height),w=img.width*k,h=img.height*k;
+    p.ctx.globalCompositeOperation="source-over";p.ctx.fillStyle="#fff";p.ctx.fillRect(0,0,S,S);p.ctx.drawImage(img,(S-w)/2,(S-h)/2,w,h);URL.revokeObjectURL(img.src)};
+  img.src=URL.createObjectURL(f);e.target.value="";
+};
+$("#ink").onclick=()=>{
+  const p=panels[active];snap(p);const d=p.ctx.getImageData(0,0,S,S),a=d.data;
+  for(let i=0;i<a.length;i+=4){const g=.3*a[i]+.59*a[i+1]+.11*a[i+2];let v=(g-120)*2.4+120;v=v>165?255:Math.max(0,v);a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
+  p.ctx.putImageData(d,0,0);
+};
+
+// save as PNG
+function wrap(x,t,max){const w=t.split(" "),L=[];let l="";w.forEach(s=>{const n=l?l+" "+s:s;if(x.measureText(n).width>max&&l){L.push(l);l=s}else l=n});L.push(l);return L}
+$("#save").onclick=()=>{
+  const [c,r]=LAY[cur],G=16,W=c*S+(c+1)*G,H=r*S+(r+1)*G,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const x=cv.getContext("2d");x.fillStyle="#1B1B2F";x.fillRect(0,0,W,H);
+  panels.forEach((p,i)=>{
+    const ox=G+(i%c)*(S+G),oy=G+Math.floor(i/c)*(S+G);x.fillStyle="#fff";x.fillRect(ox,oy,S,S);x.drawImage(p.cv,ox,oy);
+    x.save();x.beginPath();x.rect(ox,oy,S,S);x.clip();
+    p.el.querySelectorAll(".item").forEach(it=>{
+      const px=ox+parseFloat(it.style.left)/100*S,py=oy+parseFloat(it.style.top)/100*S,txt=it.firstChild.textContent;
+      x.textAlign="center";x.textBaseline="middle";
+      if(it.dataset.kind==="sticker"){x.font=`${.12*S}px serif`;x.fillStyle="#000";x.fillText(txt,px,py);return}
+      const fs=.045*S;x.font=`700 ${fs}px "Comic Neue","Comic Sans MS",sans-serif`;
+      const L=wrap(x,txt,.44*S),w=Math.max(...L.map(s=>x.measureText(s).width))+.06*S,h=L.length*fs*1.2+.032*S;
+      x.fillStyle="#fff";x.strokeStyle="#1B1B2F";x.lineWidth=.007*S*1.4;x.beginPath();
+      if(it.dataset.kind==="thought")x.ellipse(px,py,w*.62,h*.7,0,0,7);else x.roundRect(px-w/2,py-h/2,w,h,.03*S);
+      x.fill();x.stroke();x.fillStyle="#1B1B2F";
+      L.forEach((s,k)=>x.fillText(s,px,py-(L.length-1)*fs*.6+k*fs*1.2));
+    });x.restore();
+  });
+  const a=document.createElement("a");a.download="my-comic.png";a.href=cv.toDataURL("image/png");a.click();
+};
+build(1);
+</script>
+</body>
+</html>
