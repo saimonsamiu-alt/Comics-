@@ -1,21 +1,5 @@
 {
-  "firestore": [
-    {
-      "database": "ai-studio-android-comiccra-d6b98e48-7901-4d3d-b738-2f60b3636c26",
-      "rules": "firestore.rules"
-    }
-  ],
-  "emulators": {
-    "firestore": {
-      "host": "127.0.0.1",
-      "port": 8085
-    },
-    "auth": {
-      "host": "127.0.0.1",
-      "port": 9099
-    },
-    "ui": {
-      "enabled": false
-    }
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

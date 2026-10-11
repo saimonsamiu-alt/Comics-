@@ -1,6 +1,8 @@
 package com.example
 
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -27,18 +29,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.credentials.CredentialManager
+import com.example.data.model.Comic
 import com.example.data.repository.ComicRepository
 import com.example.ui.auth.AuthManager
 import com.example.ui.collab.CollaborationScreen
@@ -46,6 +46,9 @@ import com.example.ui.feed.SocialFeedScreen
 import com.example.ui.home.ComicHomeScreen
 import com.example.ui.profile.ProfileScreen
 import com.example.ui.reader.ComicReaderScreen
+import com.example.ui.studio.CameraXCaptureDialog
+import com.example.ui.studio.ComicLayoutSelectionScreen
+import com.example.ui.studio.ComicLayoutType
 import com.example.ui.studio.ComicStudioScreen
 import com.example.ui.theme.MyApplicationTheme
 
@@ -58,11 +61,9 @@ enum class MainTab(val title: String, val selectedIcon: ImageVector, val unselec
 }
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             MyApplicationTheme {
                 ComicCraftApp()
@@ -74,41 +75,45 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ComicCraftApp() {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val repository = remember { ComicRepository(context) }
-    val credentialManager = remember { CredentialManager.create(context) }
+    val repository = remember { ComicRepository() }
+    val authManager = remember { AuthManager(context) }
 
     var currentTab by remember { mutableStateOf(MainTab.HOME) }
-    var activeReadingComicId by remember { mutableStateOf<String?>(null) }
+    var readingComic by remember { mutableStateOf<Comic?>(null) }
+    var studioLayout by remember { mutableStateOf<ComicLayoutType?>(null) }
+    var showDirectCameraXCapture by remember { mutableStateOf(false) }
 
-    // Attempt silent auto-sign-in on app start
-    LaunchedEffect(Unit) {
-        AuthManager.attemptAutoSignIn(
-            context = context,
-            credentialManager = credentialManager,
-            onAuthSuccess = {},
-            onUnauthenticated = {},
-            scope = coroutineScope
+    // Direct CameraX Sketch Capture Dialog (can be triggered from home banner, layout picker, or studio)
+    if (showDirectCameraXCapture) {
+        CameraXCaptureDialog(
+            onDismiss = { showDirectCameraXCapture = false },
+            onPhotoCaptured = { photo ->
+                showDirectCameraXCapture = false
+                studioLayout = ComicLayoutType.SINGLE_PANEL
+                currentTab = MainTab.STUDIO
+                Toast.makeText(context, "Hand-drawn sketch captured with CameraX! 🎨", Toast.LENGTH_SHORT).show()
+            }
         )
     }
 
-    if (activeReadingComicId != null) {
+    if (readingComic != null) {
         BackHandler {
-            activeReadingComicId = null
+            readingComic = null
         }
         ComicReaderScreen(
-            comicId = activeReadingComicId!!,
-            repository = repository,
-            onBack = { activeReadingComicId = null }
+            comic = readingComic!!,
+            onBack = { readingComic = null },
+            repository = repository
         )
     } else {
         Scaffold(
+            modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 NavigationBar(
-                    modifier = Modifier.navigationBarsPadding().testTag("bottom_nav_bar"),
+                    modifier = Modifier.navigationBarsPadding(),
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
-                    MainTab.entries.forEach { tab ->
+                    MainTab.values().forEach { tab ->
                         val isSelected = currentTab == tab
                         NavigationBarItem(
                             selected = isSelected,
@@ -133,29 +138,50 @@ fun ComicCraftApp() {
                     .padding(innerPadding)
             ) {
                 when (currentTab) {
-                    MainTab.HOME -> ComicHomeScreen(
-                        repository = repository,
-                        onComicSelected = { id -> activeReadingComicId = id },
-                        onOpenStudio = { currentTab = MainTab.STUDIO }
-                    )
-                    MainTab.STUDIO -> ComicStudioScreen(
-                        repository = repository,
-                        onNavigateToFeed = { currentTab = MainTab.FEED }
-                    )
-                    MainTab.FEED -> SocialFeedScreen(
-                        repository = repository,
-                        onRemixPost = { _ ->
-                            currentTab = MainTab.STUDIO
-                        },
-                        onOpenStudio = { currentTab = MainTab.STUDIO }
-                    )
-                    MainTab.COLLAB -> CollaborationScreen(
-                        repository = repository
-                    )
-                    MainTab.PROFILE -> ProfileScreen(
-                        repository = repository,
-                        onOpenComic = { id -> activeReadingComicId = id }
-                    )
+                    MainTab.HOME -> {
+                        ComicHomeScreen(
+                            repository = repository,
+                            onComicSelected = { readingComic = it },
+                            onNavigateToStudio = {
+                                studioLayout = null
+                                currentTab = MainTab.STUDIO
+                            },
+                            onDirectCameraCapture = {
+                                showDirectCameraXCapture = true
+                            }
+                        )
+                    }
+                    MainTab.STUDIO -> {
+                        if (studioLayout == null) {
+                            ComicLayoutSelectionScreen(
+                                onLayoutSelected = { selected ->
+                                    studioLayout = selected
+                                },
+                                onDirectCameraCapture = {
+                                    showDirectCameraXCapture = true
+                                }
+                            )
+                        } else {
+                            BackHandler {
+                                studioLayout = null
+                            }
+                            ComicStudioScreen(
+                                initialLayout = studioLayout!!,
+                                onBackToLayouts = { studioLayout = null },
+                                repository = repository,
+                                authManager = authManager
+                            )
+                        }
+                    }
+                    MainTab.FEED -> {
+                        SocialFeedScreen(repository = repository)
+                    }
+                    MainTab.COLLAB -> {
+                        CollaborationScreen(repository = repository)
+                    }
+                    MainTab.PROFILE -> {
+                        ProfileScreen(repository = repository, authManager = authManager)
+                    }
                 }
             }
         }

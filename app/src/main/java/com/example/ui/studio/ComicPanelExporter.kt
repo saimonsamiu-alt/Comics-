@@ -45,6 +45,7 @@ object ComicPanelExporter {
         speechBubbles: List<SpeechBubbleItem>,
         stickers: List<StickerItem>,
         soundEffects: List<SoundEffectItem>,
+        layoutType: ComicLayoutType = ComicLayoutType.SINGLE_PANEL,
         width: Int = 1200,
         height: Int = 1200
     ): Bitmap {
@@ -98,22 +99,25 @@ object ComicPanelExporter {
             drawPresetCharacter(canvas, width, height, sketchType, characterColor.toArgb(), colorStyle)
         }
 
-        // 4. Render Speech Bubbles
+        // 4. Render Layout Panel Dividers (for multi-panel formats)
+        drawLayoutDividers(canvas, width, height, layoutType, margin)
+
+        // 5. Render Speech Bubbles
         speechBubbles.forEach { bubble ->
             drawSpeechBubble(canvas, width, height, bubble)
         }
 
-        // 5. Render Stickers
+        // 6. Render Stickers
         stickers.forEach { sticker ->
             drawSticker(canvas, width, height, sticker)
         }
 
-        // 6. Render Sound Effects
+        // 7. Render Sound Effects
         soundEffects.forEach { sfx ->
             drawSoundEffect(canvas, width, height, sfx)
         }
 
-        // 7. Outer Comic Border Frame
+        // 8. Outer Comic Border Frame
         val borderPaint = Paint().apply {
             color = AndroidColor.BLACK
             style = Paint.Style.STROKE
@@ -138,9 +142,107 @@ object ComicPanelExporter {
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
-        canvas.drawText("ComicCraft AI Studio • Hand-Drawn Comic", margin + 12f, height - 12f, watermarkPaint)
+        val layoutTag = layoutType.title
+        canvas.drawText("ComicCraft AI Studio • $layoutTag", margin + 12f, height - 12f, watermarkPaint)
 
         return bitmap
+    }
+
+    private fun drawLayoutDividers(
+        canvas: Canvas,
+        width: Int,
+        height: Int,
+        layoutType: ComicLayoutType,
+        margin: Float
+    ) {
+        val dividerPaint = Paint().apply {
+            color = AndroidColor.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 6f
+            isAntiAlias = true
+        }
+        val labelBgPaint = Paint().apply {
+            color = AndroidColor.WHITE
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val labelBorderPaint = Paint().apply {
+            color = AndroidColor.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+            isAntiAlias = true
+        }
+        val labelTextPaint = Paint().apply {
+            color = AndroidColor.BLACK
+            textSize = 18f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+
+        when (layoutType) {
+            ComicLayoutType.THREE_PANEL_STRIP -> {
+                val h1 = height / 3f
+                val h2 = (height * 2) / 3f
+                canvas.drawLine(margin, h1, width - margin, h1, dividerPaint)
+                canvas.drawLine(margin, h2, width - margin, h2, dividerPaint)
+
+                listOf(
+                    Triple("1 • Setup", margin + 10f, margin + 26f),
+                    Triple("2 • Conflict", margin + 10f, h1 + 26f),
+                    Triple("3 • Punchline", margin + 10f, h2 + 26f)
+                ).forEach { (label, x, y) ->
+                    val tw = labelTextPaint.measureText(label)
+                    val r = RectF(x - 4f, y - 18f, x + tw + 10f, y + 6f)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBgPaint)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBorderPaint)
+                    canvas.drawText(label, x + 2f, y, labelTextPaint)
+                }
+            }
+            ComicLayoutType.FOUR_PANEL_GRID -> {
+                val midX = width / 2f
+                val midY = height / 2f
+                canvas.drawLine(midX, margin, midX, height - margin, dividerPaint)
+                canvas.drawLine(margin, midY, width - margin, midY, dividerPaint)
+
+                listOf(
+                    Triple("Panel 1", margin + 10f, margin + 26f),
+                    Triple("Panel 2", midX + 10f, margin + 26f),
+                    Triple("Panel 3", margin + 10f, midY + 26f),
+                    Triple("Panel 4", midX + 10f, midY + 26f)
+                ).forEach { (label, x, y) ->
+                    val tw = labelTextPaint.measureText(label)
+                    val r = RectF(x - 4f, y - 18f, x + tw + 8f, y + 6f)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBgPaint)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBorderPaint)
+                    canvas.drawText(label, x + 2f, y, labelTextPaint)
+                }
+            }
+            ComicLayoutType.TWO_PANEL_SPLIT -> {
+                val splitY = height * 0.60f
+                canvas.drawLine(margin, splitY, width - margin, splitY, dividerPaint)
+
+                listOf(
+                    Triple("Main Action", margin + 10f, margin + 26f),
+                    Triple("Reaction", margin + 10f, splitY + 26f)
+                ).forEach { (label, x, y) ->
+                    val tw = labelTextPaint.measureText(label)
+                    val r = RectF(x - 4f, y - 18f, x + tw + 8f, y + 6f)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBgPaint)
+                    canvas.drawRoundRect(r, 6f, 6f, labelBorderPaint)
+                    canvas.drawText(label, x + 2f, y, labelTextPaint)
+                }
+            }
+            ComicLayoutType.CINEMATIC_WIDESCREEN -> {
+                val letterboxH = height * 0.12f
+                val barPaint = Paint().apply {
+                    color = AndroidColor.BLACK
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(0f, 0f, width.toFloat(), letterboxH, barPaint)
+                canvas.drawRect(0f, height - letterboxH, width.toFloat(), height.toFloat(), barPaint)
+            }
+            ComicLayoutType.SINGLE_PANEL -> {}
+        }
     }
 
     private fun drawAuraEffect(canvas: Canvas, width: Int, height: Int, auraType: String) {

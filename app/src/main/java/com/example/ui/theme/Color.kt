@@ -2,20 +2,23 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val ComicOrange = Color(0xFFFF5722)
-val ComicOrangeLight = Color(0xFFFF8A65)
-val ComicIndigo = Color(0xFF6C5CE7)
-val ComicIndigoLight = Color(0xFFA29BFE)
-val ComicCyan = Color(0xFF00CEC9)
-val ComicYellow = Color(0xFFFDCB6E)
-val ComicPink = Color(0xFFFD79A8)
+val ComicPrimary = Color(0xFFFF5722) // Energetic comic orange
+val ComicOnPrimary = Color(0xFFFFFFFF)
+val ComicPrimaryContainer = Color(0xFFFFCCBC)
+val ComicOnPrimaryContainer = Color(0xFF3E1200)
 
-val DarkInkBg = Color(0xFF0F101A)
-val DarkInkSurface = Color(0xFF181A2A)
-val DarkInkCard = Color(0xFF22243A)
-val DarkInkBorder = Color(0xFF333754)
+val ComicSecondary = Color(0xFF009688) // Cyan teal
+val ComicOnSecondary = Color(0xFFFFFFFF)
+val ComicSecondaryContainer = Color(0xFFB2DFDB)
+val ComicOnSecondaryContainer = Color(0xFF00332C)
 
-val LightParchmentBg = Color(0xFFF8F9FD)
-val LightParchmentSurface = Color(0xFFFFFFFF)
-val LightParchmentCard = Color(0xFFEFF2F8)
+val ComicTertiary = Color(0xFFFFC107) // Comic action yellow
+val ComicOnTertiary = Color(0xFF2B2000)
 
+val ComicBackgroundDark = Color(0xFF121214)
+val ComicSurfaceDark = Color(0xFF1E1E24)
+val ComicSurfaceVariantDark = Color(0xFF2A2A32)
+
+val ComicBackgroundLight = Color(0xFFFBFBFC)
+val ComicSurfaceLight = Color(0xFFFFFFFF)
+val ComicSurfaceVariantLight = Color(0xFFF0F0F4)

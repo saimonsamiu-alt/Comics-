@@ -8,6 +8,7 @@ import com.example.data.local.dao.CommentDao
 import com.example.data.local.dao.UserDao
 import com.example.data.local.entity.ComicEntity
 import com.example.data.local.entity.CommentEntity
+import com.example.data.local.entity.SketchEntity
 import com.example.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -22,7 +23,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+@Config(sdk = [36])
 class ComicDatabaseTest {
 
     private lateinit var database: ComicCraftDatabase
