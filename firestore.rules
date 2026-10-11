@@ -7,22 +7,54 @@ service cloud.firestore {
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 64;
     }
+    // A signed-in person may nudge a counter field (likes, views, remixes) by one.
+    function onlyBumps(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields)
+        && (!('likesCount' in request.resource.data.diff(resource.data).affectedKeys())
+            || math.abs(request.resource.data.get('likesCount', 0) - resource.data.get('likesCount', 0)) <= 1)
+        && (!('viewCount' in request.resource.data.diff(resource.data).affectedKeys())
+            || math.abs(request.resource.data.get('viewCount', 0) - resource.data.get('viewCount', 0)) <= 1)
+        && (!('remixCount' in request.resource.data.diff(resource.data).affectedKeys())
+            || math.abs(request.resource.data.get('remixCount', 0) - resource.data.get('remixCount', 0)) <= 1);
+    }
 
     match /comics/{comicId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(comicId)
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.title is string && request.resource.data.title.size() <= 80
+        && (!('pagesJson' in request.resource.data) || request.resource.data.pagesJson.size() < 900000);
+      allow update: if isSignedIn() && (
+        (resource.data.authorId == request.auth.uid
+          && request.resource.data.authorId == request.auth.uid
+          && (!('pagesJson' in request.resource.data) || request.resource.data.pagesJson.size() < 900000))
+        || onlyBumps(['likesCount', 'viewCount']));
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     match /collaborations/{collabId} {
       allow read: if true;
-      allow create, update: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     match /feed/{postId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(postId)
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.title is string && request.resource.data.title.size() <= 80
+        && request.resource.data.get('description', '').size() <= 400;
+      allow update: if isSignedIn() && (
+        resource.data.authorId == request.auth.uid
+        || onlyBumps(['likesCount', 'remixCount']));
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    // Reports from readers. Only you (the owner) can read them, in the Firebase console.
+    match /reports/{reportId} {
+      allow create: if isSignedIn() && request.resource.data.reporterId == request.auth.uid;
+      allow read, update, delete: if false;
     }
 
     match /users/{userId} {

@@ -1,181 +1,1285 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ComicCraft - Make your own comic!</title>
-<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ComicCraft - Turn your doodles into comics</title>
+<meta name="description" content="Create, read and share comics. Draw or scan a sketch, add speech bubbles and stickers, and share with the community.">
+<meta name="theme-color" content="#0F101A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.jpg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Baloo+2:wght@500;600;700;800&family=Baloo+Da+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#FFFDF5;--ink:#1B1B2F;--yellow:#FFD23F;--pink:#FF5D8F;--sky:#3EC1F3;--mint:#4FD6A5}
+:root{
+  --bg:#0F101A;--surf:#181A2A;--card:#22243A;--line:#333754;--tx:#F4F5FB;--mut:#A9ACC6;
+  --indigo:#6C5CE7;--indL:#A29BFE;--orange:#FF5722;--cyan:#00CEC9;--yellow:#FDCB6E;--pink:#FD79A8;
+  --edge:#05050B;--paper:#FFFDF6;--ink:#16172A;--focus:#FDCB6E;--dots:rgba(162,155,254,.11);
+  --disp:Bangers,Impact,"Arial Narrow",sans-serif;
+  --body:"Baloo 2","Baloo Da 2","Trebuchet MS",system-ui,sans-serif;
+}
+[data-theme=light]{--bg:#F8F9FD;--surf:#FFFFFF;--card:#EFF2F8;--line:#D3D8EA;--tx:#16172A;--mut:#585C7A;--edge:#16172A;--focus:#6C5CE7;--dots:rgba(108,92,231,.10)}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Comic Neue","Comic Sans MS",system-ui,sans-serif;font-weight:700;color:var(--ink);background:var(--paper);background-image:radial-gradient(rgba(62,193,243,.28) 1.5px,transparent 1.6px);background-size:16px 16px}
-header{padding:14px 16px 4px;text-align:center}
-h1{font-family:Bangers,Impact,sans-serif;font-size:clamp(2.2rem,8vw,3.6rem);margin:0;letter-spacing:2px;color:var(--pink);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
-h2{font-family:Bangers,Impact,sans-serif;font-size:1.5rem;margin:0 0 8px;letter-spacing:1px}
-main{max-width:980px;margin:0 auto;padding:8px 12px 40px}
-.bar{background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);padding:10px 12px;margin:12px 0}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-button,label.btn{font:inherit;font-size:1.05rem;min-height:48px;min-width:48px;padding:6px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--yellow);color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--ink);display:inline-flex;align-items:center;gap:6px}
-button:active,label.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
-button:focus-visible,label.btn:focus-within,input:focus-visible{outline:4px solid var(--sky);outline-offset:2px}
-button.on{background:var(--sky)}
-button.big{background:var(--mint);font-size:1.3rem}
-.sw{width:44px;height:44px;border-radius:50%;padding:0;box-shadow:2px 2px 0 var(--ink)}
-.sw.on{outline:4px solid var(--ink);outline-offset:2px}
-input[type=range]{width:120px;height:32px;accent-color:var(--pink)}
-#board{display:grid;gap:12px;background:var(--ink);padding:12px;border:3px solid var(--ink);border-radius:8px;box-shadow:6px 6px 0 var(--pink)}
-.panel{position:relative;background:#fff;aspect-ratio:1;container-type:inline-size;overflow:hidden;touch-action:none}
-.panel.active{outline:6px solid var(--yellow);outline-offset:-6px}
-.panel canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.item{position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;touch-action:none}
-.item.sticker{font-size:12cqw;line-height:1}
-.item.bubble{font-size:4.5cqw;background:#fff;border:.7cqw solid var(--ink);padding:1.6cqw 3cqw;max-width:50cqw;text-align:center;border-radius:3cqw;line-height:1.2}
-.item.bubble.thought{border-radius:50%}
-.item .x{position:absolute;right:-3cqw;top:-3cqw;width:6cqw;height:6cqw;min-width:0;min-height:0;padding:0;border-radius:50%;background:var(--pink);font-size:3.5cqw;box-shadow:none;display:none;justify-content:center}
-.item.sel .x{display:flex}
-.hint{margin:6px 0 0;font-size:.95rem}
-@media (prefers-reduced-motion:no-preference){.pop{animation:pop .25s}@keyframes pop{from{transform:translate(-50%,-50%) scale(.3)}}}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;font:600 1.05rem/1.45 var(--body);color:var(--tx);background:var(--bg);background-image:radial-gradient(var(--dots) 1.6px,transparent 1.8px);background-size:18px 18px;padding-bottom:84px;min-height:100vh}
+h1,h2,h3{font-family:var(--disp);font-weight:400;letter-spacing:.04em;margin:0;line-height:1}
+h2{font-size:clamp(1.9rem,5vw,2.8rem)}
+p{margin:0}
+a{color:inherit}
+img{max-width:100%}
+:focus-visible{outline:4px solid var(--focus);outline-offset:3px;border-radius:8px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.sec{padding:34px 0 8px}
+.muted{color:var(--mut)}
+
+/* header & nav */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:2px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:64px;padding-top:env(safe-area-inset-top)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:400 1.8rem/1 var(--disp);letter-spacing:.05em}
+.brand img{width:40px;height:40px;border-radius:11px;border:3px solid var(--edge)}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{display:flex;align-items:center;gap:6px;text-decoration:none;padding:8px 13px;border-radius:12px;min-height:44px;font-weight:800}
+.nav a[aria-current=page]{background:var(--indigo);color:#fff}
+.nav a:not([aria-current=page]):hover{background:var(--card)}
+.ctl{display:flex;gap:8px}
+.ico{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--tx);font:800 1rem var(--body);cursor:pointer}
+.ico:hover{border-color:var(--indL)}
+#navB{display:none}
+@media(max-width:860px){
+  #navT{display:none}
+  #navB{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;position:fixed;left:0;right:0;bottom:0;z-index:30;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:var(--surf);border-top:3px solid var(--edge)}
+  #navB a{flex-direction:column;gap:0;padding:5px 0;font-size:.78rem;line-height:1.15;justify-content:center;text-align:center;min-height:54px}
+  #navB a b{font-size:1.4rem;font-weight:400}
+  .ctl{margin-left:auto}
+}
+
+/* buttons, fields */
+.btn{font:800 1.05rem/1 var(--body);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border:3px solid var(--edge);border-radius:14px;background:var(--yellow);color:var(--ink);cursor:pointer;box-shadow:0 5px 0 var(--edge);text-decoration:none;transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(5px);box-shadow:0 0 0 var(--edge)}
+.btn.pri{background:var(--orange)}
+.btn.cy{background:var(--cyan)}
+.btn.pk{background:var(--pink)}
+.btn.ghost{background:var(--card);color:var(--tx);box-shadow:0 5px 0 var(--line);border-color:var(--line)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn.sm{min-height:44px;padding:6px 12px;font-size:1rem}
+.chip{font:800 1rem/1 var(--body);min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--card);color:var(--tx);cursor:pointer}
+.chip.on{background:var(--indigo);border-color:var(--indL);color:#fff}
+.field{font:700 1.1rem var(--body);width:100%;min-height:48px;padding:8px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--tx)}
+textarea.field{resize:vertical;line-height:1.4}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.rowf{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{display:inline-block;padding:2px 12px;border-radius:999px;background:var(--card);border:2px solid var(--line);font-weight:800;font-size:.95rem;margin:0 6px 8px 0}
+
+/* hero + promo */
+.hero{position:relative;color:#fff;overflow:hidden;clip-path:polygon(0 0,100% 0,100% 92%,0 100%);background:#0b0b16}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 40%}
+.hero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(11,11,22,.94) 0%,rgba(11,11,22,.62) 48%,rgba(11,11,22,.08) 100%)}
+.hero .wrap{position:relative;z-index:2;padding-top:48px;padding-bottom:100px}
+.cap{display:inline-block;background:var(--yellow);color:var(--ink);border:3px solid #000;padding:4px 14px;border-radius:4px;transform:rotate(-1.5deg);font-weight:800;box-shadow:4px 4px 0 #000}
+.hero h1{font-size:clamp(3rem,10vw,6.6rem);margin:16px 0 12px;max-width:9.5em;transform:rotate(-1.5deg);text-shadow:4px 4px 0 var(--indigo),8px 8px 0 #000;letter-spacing:.03em}
+.hero p{max-width:30em;font-size:1.2rem;color:#e9eaf7;margin-bottom:22px}
+.hero .row{display:flex;gap:14px;flex-wrap:wrap}
+@media(max-width:760px){.hero::before{background:linear-gradient(180deg,rgba(11,11,22,.55),rgba(11,11,22,.92))}.hero .wrap{padding-top:34px}}
+.promo{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:-34px;position:relative;z-index:3;background:linear-gradient(120deg,var(--indigo),var(--pink));color:#fff;border:4px solid #000;box-shadow:7px 7px 0 #000;padding:18px 22px;transform:rotate(-.6deg)}
+.promo .big{font-size:3rem;line-height:1}
+.promo h3{font-size:2rem;margin-bottom:2px}
+.promo p{opacity:.95}
+.promo .btn{margin-left:auto}
+@media(max-width:700px){.promo .btn{margin-left:0;width:100%}}
+
+/* comic cards */
+.shelf{display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:20px}
+.cc{all:unset;box-sizing:border-box;cursor:pointer;display:block;background:var(--paper);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--c,var(--indigo));transform:rotate(var(--rot,0deg));transition:transform .18s,box-shadow .18s;font-family:var(--body);font-weight:600}
+.cc:hover,.cc:focus-visible{transform:rotate(0) translateY(-6px);box-shadow:11px 11px 0 var(--c,var(--indigo))}
+.cc .cv{aspect-ratio:4/3;border-bottom:4px solid #000;overflow:hidden;position:relative;background:#222}
+.cc .cv svg,.cc .cv img{width:100%;height:100%;display:block;object-fit:cover}
+.cc .tag{position:absolute;left:8px;top:8px;background:var(--yellow);color:var(--ink);border:2px solid #000;padding:0 10px;font-weight:800;font-size:.9rem;border-radius:4px;transform:rotate(-2deg)}
+.cc .in{padding:12px 14px 14px}
+.cc h3{font-size:1.55rem;line-height:1.05;margin-bottom:4px}
+.cc .meta{display:flex;justify-content:space-between;color:#4a4c68;font-size:.95rem;gap:8px}
+.bar{height:8px;background:#ddd;border-radius:6px;overflow:hidden;margin-top:8px;border:2px solid #000}
+.bar i{display:block;height:100%;background:var(--cyan)}
+.sh-act{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.foot{margin:56px 0 20px;text-align:center;color:var(--mut)}
+.empty{text-align:center;padding:44px 10px;color:var(--mut);grid-column:1/-1}
+.empty .big{font-size:3.6rem}
+
+/* reader */
+.back{margin:20px 0 6px}
+.rhead{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:26px;align-items:start;margin:14px 0 28px}
+@media(max-width:760px){.rhead{grid-template-columns:1fr}}
+.rhead .cv{border:4px solid #000;box-shadow:8px 8px 0 var(--indigo);aspect-ratio:4/3;overflow:hidden;background:#222}
+.rhead .cv svg,.rhead .cv img{width:100%;height:100%;object-fit:cover;display:block}
+.rhead h2{font-size:clamp(2.2rem,6vw,3.6rem);margin-bottom:8px}
+.stars{display:flex;gap:2px;margin:6px 0 8px}
+.stars button{background:none;border:0;font-size:2.1rem;line-height:1;min-width:46px;min-height:46px;cursor:pointer;filter:grayscale(1) opacity(.45)}
+.stars button.on{filter:none}
+.strip{max-width:560px;margin:0 auto;display:grid;gap:26px}
+.rp{position:relative;aspect-ratio:1;border:4px solid #000;background:#222;overflow:hidden;box-shadow:7px 7px 0 var(--indigo);opacity:0;transform:translateY(24px) rotate(var(--rr,0deg));transition:opacity .5s,transform .5s}
+.rp.in{opacity:1;transform:none}
+.rp svg,.rp canvas{position:absolute;inset:0;width:100%;height:100%}
+.rp[data-s="1"] svg{filter:saturate(1.45) contrast(1.1)}
+.rp[data-s="2"] svg{filter:hue-rotate(-20deg) saturate(1.4) contrast(1.2) brightness(.82)}
+.rp[data-s="3"] svg{filter:sepia(.6) grayscale(.15) contrast(1.05)}
+.rp[data-s="4"] svg{filter:grayscale(1) contrast(1.35)}
+.scene text{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 5px 0 rgba(0,0,0,.35))}
+.endcard{max-width:560px;margin:30px auto;text-align:center;background:var(--paper);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--orange);padding:22px}
+.endcard h3{font-size:2rem;margin-bottom:6px}
+.prog{position:fixed;left:0;top:0;height:6px;background:var(--cyan);z-index:50;width:0;transition:width .1s}
+.cmts{max-width:560px;margin:34px auto 0;display:grid;gap:12px}
+.cmt{display:flex;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.cmt .av{font-size:1.8rem;line-height:1}
+.cmt b{display:block}
+
+/* studio */
+.picker{padding-top:18px}
+.lcards{display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-top:20px}
+.lc{all:unset;box-sizing:border-box;cursor:pointer;display:block;background:var(--paper);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--c,var(--indigo));padding:16px;font-family:var(--body);font-weight:600;transition:transform .15s,box-shadow .15s}
+.lc:hover,.lc:focus-visible{transform:translateY(-5px);box-shadow:10px 10px 0 var(--c,var(--indigo))}
+.lc .mini{display:grid;gap:5px;background:#000;padding:5px;width:150px;margin:0 auto 14px}
+.lc .mini b{background:#fff;display:block}
+.lc h3{font-size:1.6rem;margin:6px 0 2px}
+.lc .sub{color:#4a4c68}
+.lc .d{margin-top:8px;font-size:.95rem;color:#3a3c58}
+.lc .pill{background:var(--yellow);color:var(--ink);border-color:#000;margin:0}
+.studio{display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 380px;padding-top:16px;align-items:start}
+@media(max-width:980px){.studio{grid-template-columns:1fr}}
+.stage-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.stage-top .field{flex:1 1 200px;min-width:0}
+.tour{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card);border:3px dashed var(--indL);border-radius:16px;padding:8px 12px;margin-bottom:12px}
+.tour span{font-weight:800}
+.tour .x{margin-left:auto}
+.board{display:grid;gap:10px;background:#000;padding:10px;margin:0 auto;border:4px solid #000;box-shadow:8px 8px 0 var(--orange)}
+.sp{position:relative;background:#fff;overflow:hidden;cursor:crosshair}
+.sp.act{outline:6px solid var(--yellow);outline-offset:-6px}
+.sp canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.plabel{position:absolute;left:8px;top:8px;background:var(--yellow);color:var(--ink);border:2px solid #000;font-weight:800;font-size:.85rem;padding:0 8px;border-radius:4px;pointer-events:none;opacity:.9}
+.board[data-style="1"] .dr{filter:saturate(1.45) contrast(1.1)}
+.board[data-style="2"] .dr{filter:hue-rotate(-20deg) saturate(1.4) contrast(1.2) brightness(.82)}
+.board[data-style="3"] .dr{filter:sepia(.6) grayscale(.15) contrast(1.05)}
+.board[data-style="4"] .dr{filter:grayscale(1) contrast(1.35)}
+@media(prefers-reduced-motion:no-preference){
+  .board[data-motion="1"] .dr{animation:pan 7s ease-in-out infinite alternate}
+  .board[data-motion="2"] .dr{animation:shake .35s linear infinite}
+  .board[data-motion="3"] .dr{animation:breath 3.2s ease-in-out infinite alternate}
+  @keyframes pan{from{transform:scale(1) translate(0,0)}to{transform:scale(1.14) translate(-2.5%,-2%)}}
+  @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-1.2%,.8%)}50%{transform:translate(1%,-1%)}75%{transform:translate(-.6%,-.8%)}}
+  @keyframes breath{from{transform:scale(1)}to{transform:scale(1.045)}}
+}
+.hint{margin:14px 0 8px;color:var(--mut);text-align:center}
+.selbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;background:var(--card);border:3px solid var(--yellow);border-radius:16px;padding:8px 10px;margin:10px auto;max-width:640px}
+.selbar span{font-weight:800;margin-right:4px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.dock{background:var(--surf);border:3px solid var(--line);border-radius:20px;padding:12px;position:sticky;top:78px;max-height:calc(100vh - 92px);overflow:auto}
+@media(max-width:980px){.dock{position:static;max-height:none}}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.tabs button{display:flex;flex-direction:column;align-items:center;font:800 .9rem/1.2 var(--body);padding:8px 2px;border-radius:14px;border:2px solid transparent;background:var(--card);color:var(--tx);cursor:pointer;min-height:60px}
+.tabs button b{font-size:1.45rem;font-weight:400;line-height:1.2}
+.tabs button[aria-selected=true]{background:var(--indigo);color:#fff;border-color:var(--indL)}
+.pane{display:grid;gap:12px}
+.pane h3{font-size:1.25rem;color:var(--indL)}
+.pal{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--edge);cursor:pointer;padding:0;box-shadow:0 0 0 2px var(--line)}
+.sw.on{box-shadow:0 0 0 4px var(--yellow)}
+.cust{position:relative;width:44px;height:44px;border-radius:50%;border:3px dashed var(--mut);display:grid;place-items:center;cursor:pointer;font-size:1.3rem;overflow:hidden}
+.cust input{position:absolute;inset:-10px;opacity:0;cursor:pointer;width:80px;height:80px}
+.rng{display:flex;align-items:center;gap:10px}
+.rng input{flex:1;height:36px;accent-color:var(--pink)}
+.rng i{width:44px;height:44px;display:grid;place-items:center}
+.rng i u{display:block;border-radius:50%;background:var(--tx)}
+.stk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stk button{font-size:2rem;line-height:1;min-height:60px;border-radius:14px;border:2px solid var(--line);background:var(--card);cursor:pointer;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.stk button:hover{border-color:var(--yellow);transform:scale(1.06)}
+
+/* community */
+.feed{display:grid;gap:30px;max-width:640px;margin:22px auto 0}
+.post{background:var(--paper);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--c,var(--indigo))}
+.post .ph{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.ava{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:3px solid #000;font-size:1.4rem;background:var(--yellow)}
+.post .fi{aspect-ratio:4/3;border-top:4px solid #000;border-bottom:4px solid #000;background:#222;overflow:hidden;display:grid}
+.post .fi svg,.post .fi img{width:100%;height:100%;object-fit:contain;display:block;background:#111}
+.post .pb{padding:12px 14px 14px}
+.post h3{font-size:1.5rem;margin-bottom:4px}
+.post .design{margin-top:8px;font-size:.92rem;color:#4a4c68}
+.post .pa{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.hdr{display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap}
+
+/* collab */
+.rooms{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));margin-top:20px}
+.room{all:unset;box-sizing:border-box;cursor:pointer;display:block;background:var(--paper);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--c,var(--cyan));padding:16px;font-family:var(--body);font-weight:600}
+.room:hover,.room:focus-visible{transform:translateY(-4px)}
+.room h3{font-size:1.6rem;margin-bottom:4px}
+.room p{color:#3a3c58;font-size:.98rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.st{display:inline-block;border:2px solid #000;border-radius:999px;padding:0 10px;font-weight:800;font-size:.85rem;background:var(--cyan);color:var(--ink)}
+.st.done{background:var(--yellow)}
+.script{min-height:260px;font-size:1.1rem}
+.mem{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+
+/* profile */
+.pf{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--surf);border:3px solid var(--line);border-radius:22px;padding:18px;margin-top:20px}
+.pf .big{font-size:4rem;line-height:1;display:grid;place-items:center;width:96px;height:96px;border-radius:50%;background:var(--yellow);border:4px solid var(--edge)}
+.pf .fld{flex:1 1 240px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stats div{background:var(--card);border:2px solid var(--line);border-radius:16px;text-align:center;padding:10px}
+.stats b{display:block;font:400 2.2rem/1 var(--disp);color:var(--yellow)}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.note{background:var(--card);border-left:6px solid var(--cyan);border-radius:10px;padding:10px 14px;margin:12px 0;color:var(--mut)}
+
+/* dialog + toast */
+dialog{border:4px solid #000;border-radius:18px;background:var(--paper);color:var(--ink);padding:22px;width:min(92vw,440px);box-shadow:8px 8px 0 var(--indigo)}
+dialog::backdrop{background:rgba(5,5,11,.65)}
+dialog h3{font-size:1.8rem;margin-bottom:12px}
+dialog .field{background:#fff;color:var(--ink);border-color:#9aa0c0;margin-bottom:10px}
+dialog menu{display:flex;flex-direction:row-reverse;gap:10px;justify-content:flex-start;padding:0;margin:14px 0 0}
+#toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,30px);background:var(--yellow);color:var(--ink);border:3px solid #000;border-radius:14px;padding:10px 18px;font-weight:800;box-shadow:0 5px 0 #000;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:861px){#toast{bottom:30px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}.rp{opacity:1;transform:none}}
+
+/* published comics, select, reports, AI */
+.strip.wide{max-width:720px}
+.rp.pg{aspect-ratio:auto;background:#fff}
+.rp.pg img{position:static;display:block;width:100%;height:auto}
+select.field{appearance:auto}
+.rep{min-width:44px}
+#aiBox{border:3px dashed var(--pink);border-radius:16px;padding:10px;display:grid;gap:12px}
+#aiBox[hidden]{display:none}
+#aiBox h3{font-size:1.25rem;color:var(--pink)}
+
 </style>
 </head>
 <body>
-<header><h1>ComicCraft</h1><p style="margin:4px 0">Draw. Talk. Share. Make your own comic!</p></header>
+<noscript><p style="padding:24px">ComicCraft needs JavaScript to run. Please turn it on in your browser.</p></noscript>
+<div class="prog" id="prog" hidden></div>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="#home"><img src="assets/icon.jpg" alt="">ComicCraft</a>
+  <nav class="nav" id="navT" aria-label="Main"></nav>
+  <div class="ctl">
+    <button class="ico" id="langB" aria-label="Language">বাং</button>
+    <button class="ico" id="themeB" aria-label="Light or dark">🌗</button>
+  </div>
+</div></header>
+<nav class="nav" id="navB" aria-label="Main"></nav>
+
 <main>
-<section class="bar" aria-label="Pick a page">
-<h2>1. Pick your page</h2>
-<div class="row" id="layouts">
-<button data-l="1" class="on">1 big picture</button><button data-l="2">2 pictures</button><button data-l="3">3 strip</button><button data-l="4">4 grid</button>
+<!-- HOME / EXPLORE -->
+<section id="v-home" class="view">
+  <div class="hero">
+    <img src="assets/banner.jpg" alt="">
+    <div class="wrap">
+      <span class="cap" data-i18n="hero_cap"></span>
+      <h1 data-i18n="hero_h1"></h1>
+      <p data-i18n="hero_p"></p>
+      <div class="row">
+        <a class="btn pri" href="#studio">🎨 <span data-i18n="cta_draw"></span></a>
+        <a class="btn cy" href="#home" id="ctaRead">📖 <span data-i18n="cta_read"></span></a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="promo">
+      <div class="big">📸</div>
+      <div><h3 data-i18n="promo_h"></h3><p data-i18n="promo_p"></p></div>
+      <button class="btn" id="promoSnap">📷 <span data-i18n="snap"></span></button>
+    </div>
+    <div id="cont" hidden class="sec"><h2 data-i18n="cont_h"></h2><div class="shelf" id="contList"></div></div>
+    <div class="sec" id="comics">
+      <h2 data-i18n="feat_h"></h2>
+      <input class="field" id="q" type="search" data-i18n-ph="search_ph" aria-label="Search" style="margin-top:14px">
+      <div class="chips" id="genres"></div>
+      <div class="shelf" id="library"></div>
+    </div>
+    <div class="sec" id="ucSec" hidden><h2 data-i18n="cc_h"></h2><div class="shelf" id="ucList"></div></div>
+    <p class="foot" data-i18n="foot"></p>
+  </div>
+</section>
+
+<!-- READER -->
+<section id="v-read" class="view" hidden><div class="wrap" id="reader"></div></section>
+
+<!-- STUDIO -->
+<section id="v-studio" class="view" hidden>
+  <div class="wrap picker" id="picker">
+    <h2 data-i18n="pick_h"></h2>
+    <p class="muted" data-i18n="pick_p" style="margin-top:6px"></p>
+    <div class="lcards" id="lcards"></div>
+    <div id="projWrap" hidden class="sec"><h2 data-i18n="proj_h"></h2><div class="shelf" id="projList"></div></div>
+  </div>
+
+  <div class="wrap studio" id="editor" hidden>
+    <div class="stage">
+      <div class="tour" id="tour"><span>① <span data-i18n="tour1"></span></span><span>② <span data-i18n="tour2"></span></span><span>③ <span data-i18n="tour3"></span></span><button class="ico x" id="tourX" aria-label="Close">✖</button></div>
+      <div class="stage-top">
+        <button class="btn sm ghost" id="toLayouts">← <span data-i18n="layouts"></span></button>
+        <input id="title" class="field" maxlength="40" data-i18n-ph="title_ph" aria-label="Comic name">
+      </div>
+      <div id="board" class="board"></div>
+      <p class="hint" data-i18n="hint"></p>
+      <div id="selbar" class="selbar" hidden>
+        <span data-i18n="sel_h"></span>
+        <button class="btn sm ghost" id="sMinus" aria-label="Smaller">➖</button>
+        <button class="btn sm ghost" id="sPlus" aria-label="Bigger">➕</button>
+        <button class="btn sm ghost" id="sRot" aria-label="Rotate">🔄</button>
+        <button class="btn sm ghost" id="sEdit">✏️ <span data-i18n="edit"></span></button>
+        <button class="btn sm pk" id="sDel" aria-label="Delete">🗑️</button>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="undo">↩️ <span data-i18n="undo"></span></button>
+        <button class="btn ghost" id="redo">↪️ <span data-i18n="redo"></span></button>
+        <button class="btn cy" id="saveProj">💾 <span data-i18n="save_lib"></span></button>
+        <button class="btn pk" id="postIt">🌟 <span data-i18n="post"></span></button>
+        <button class="btn cy" id="publish">📖 <span data-i18n="pub"></span></button>
+        <button class="btn pri" id="download">⬇️ <span data-i18n="download"></span></button>
+        <button class="btn" id="share" hidden>📤 <span data-i18n="share"></span></button>
+      </div>
+    </div>
+
+    <aside class="dock" aria-label="Tools">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="draw" aria-selected="true"><b>✏️</b><span data-i18n="t_draw"></span></button>
+        <button role="tab" data-tab="words" aria-selected="false"><b>💬</b><span data-i18n="t_words"></span></button>
+        <button role="tab" data-tab="stick" aria-selected="false"><b>⭐</b><span data-i18n="t_stick"></span></button>
+        <button role="tab" data-tab="style" aria-selected="false"><b>🎨</b><span data-i18n="t_style"></span></button>
+      </div>
+
+      <div class="pane" data-pane="draw">
+        <div class="rowf"><button id="pen" class="chip on">✏️ <span data-i18n="pen"></span></button><button id="eraser" class="chip">🧽 <span data-i18n="eraser"></span></button></div>
+        <div class="pal" id="pal"></div>
+        <label class="rng"><span data-i18n="size"></span><input id="size" type="range" min="2" max="40" value="8"><i><u id="dot"></u></i></label>
+        <h3 data-i18n="scan_h"></h3>
+        <label class="btn pk">📷 <span data-i18n="snap"></span><input id="snap" class="vh" type="file" accept="image/*" capture="environment"></label>
+        <label class="btn cy">🖼️ <span data-i18n="photo"></span><input id="photo" class="vh" type="file" accept="image/*"></label>
+        <button class="btn" id="ink">✨ <span data-i18n="ink"></span></button>
+        <div id="aiBox" hidden><h3 data-i18n="ai_h"></h3><div class="rowf" id="aiStyles"></div><button class="btn pri" id="aiGo">✨ <span data-i18n="ai_go"></span></button></div>
+        <h3 data-i18n="bg_h"></h3>
+        <div class="rowf" id="bgs"></div>
+        <button class="btn ghost" id="clr">🗑️ <span data-i18n="clear"></span></button>
+      </div>
+
+      <div class="pane" data-pane="words" hidden>
+        <button class="btn" data-bub="speech">💬 <span data-i18n="say"></span></button>
+        <button class="btn cy" data-bub="thought">💭 <span data-i18n="think"></span></button>
+        <button class="btn pri" data-bub="shout">📢 <span data-i18n="shout"></span></button>
+        <button class="btn ghost" data-bub="whisper">🤫 <span data-i18n="whisper"></span></button>
+        <h3 data-i18n="sfx_h"></h3>
+        <div class="rowf" id="sfx"></div>
+      </div>
+
+      <div class="pane" data-pane="stick" hidden>
+        <div class="rowf" id="stkCats"></div>
+        <div class="stk" id="stk"></div>
+      </div>
+
+      <div class="pane" data-pane="style" hidden>
+        <h3 data-i18n="style_h"></h3>
+        <div class="rowf" id="styles"></div>
+        <h3 data-i18n="motion_h"></h3>
+        <div class="rowf" id="motions"></div>
+        <button class="btn cy" id="motionExp">🎬 <span data-i18n="motion_exp"></span></button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="v-community" class="view" hidden><div class="wrap sec">
+  <div class="hdr"><div><h2 data-i18n="com_h"></h2><p class="muted" data-i18n="com_p"></p></div><button class="btn pk" id="postFeed">🌟 <span data-i18n="post_sketch"></span></button></div>
+  <div class="note" id="comNote"></div>
+  <div class="feed" id="feed"></div>
 </div></section>
 
-<div id="board" aria-label="Your comic"></div>
-<p class="hint">Tap a picture box to draw in it. Tap a sticker or bubble to move it.</p>
+<!-- COLLAB -->
+<section id="v-collab" class="view" hidden><div class="wrap sec" id="collabBody"></div></section>
 
-<section class="bar">
-<h2>2. Draw</h2>
-<div class="row">
-<button id="pen" class="on">✏️ Pen</button><button id="eraser">🧽 Eraser</button>
-<span class="row" id="colors"></span>
-<input id="size" type="range" min="2" max="40" value="8" aria-label="Pen size">
-<button id="undo">↩️ Undo</button><button id="clear">🗑️ Clear box</button>
-</div>
-<div class="row" style="margin-top:8px">
-<label class="btn">📷 Photo of my drawing<input id="file" type="file" accept="image/*" hidden></label>
-<button id="ink">✨ Make it comic-ink</button>
-</div></section>
-
-<section class="bar">
-<h2>3. Add words and stickers</h2>
-<div class="row">
-<button id="speech">💬 Say it</button><button id="thought">💭 Think it</button>
-<span class="row" id="stickers"></span>
-</div></section>
-
-<section class="bar"><div class="row"><button id="save" class="big">⬇️ Save my comic</button></div></section>
+<!-- PROFILE -->
+<section id="v-profile" class="view" hidden><div class="wrap sec" id="profileBody"></div></section>
 </main>
 
+<dialog id="dlg"><form method="dialog">
+  <h3 id="dlgT"></h3>
+  <div id="dlgF"></div>
+  <menu><button class="btn pri" value="ok" id="dlgOk"></button><button class="btn ghost" value="cancel" formnovalidate id="dlgNo"></button></menu>
+</form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="firebase-config.js"></script>
 <script>
-const $=s=>document.querySelector(s), COLORS=["#1B1B2F","#FF5D8F","#3EC1F3","#FFD23F","#4FD6A5","#8A5CF6","#FF8A3D","#FFFFFF"];
-const STICKERS=["💥","⭐","❤️","😂","😱","🔥","🦸","🐱"], LAY={1:[1,1],2:[2,1],3:[1,3],4:[2,2]};
-let cur=1, panels=[], active=0, color=COLORS[0], tool="pen", size=8;
-const S=400;
+(()=>{
+'use strict';
+/* ===== text (English + Bangla; missing Bangla falls back to English) ===== */
+const I={en:{
+nav_home:'Explore',nav_studio:'Studio',nav_community:'Feed',nav_collab:'Collab',nav_profile:'Profile',
+hero_cap:'Meanwhile, in your notebook…',hero_h1:'Your doodles. Your comic.',
+hero_p:'Turn hand-drawn sketches into animated comics and webtoons. Add speech bubbles, stickers and sound effects, then share with the community.',
+cta_draw:'Start drawing',cta_read:'Read a comic',
+promo_h:'Draw on paper. Scan. Animate.',promo_p:'Snap your notebook sketch. We whiten the paper and sharpen the pencil into bold comic ink.',
+snap:'Snap a sketch',photo:'Pick a photo',cont_h:'Keep reading',feat_h:'Featured comics & webtoons',search_ph:'Search comics, authors, genres…',all:'All',no_match:'No comics match your search.',
+foot:'Made for creators of every age. Your drawings stay on your device unless you post them.',
+by:'by',chap:'panels',back:'Back',rate_h:'Rate this comic',bookmark:'Bookmark',bookmarked:'Bookmarked',
+end_ch:'End of Chapter 1',end_p:'Liked it? Draw your own story next.',make_own:'Make your own comic',
+cmt_h:'Comments',cmt_ph:'Say something kind…',cmt_go:'Post',toast_bm:'Bookmarked! We will save your place.',toast_unbm:'Bookmark removed.',
+pick_h:'Choose your page',pick_p:'Pick a layout to start a new comic. You can always change your mind.',proj_h:'My saved comics',layouts:'Layouts',
+lay_single_t:'Single Epic Panel',lay_single_s:'Splash art & dramatic covers',lay_single_g:'Classic Splash',lay_single_d:'One big hero panel for character art, epic moments or comic covers.',
+lay_strip_t:'3-Panel Story Strip',lay_strip_s:'Setup • Conflict • Punchline',lay_strip_g:'Webtoon & Daily Strip',lay_strip_d:'Three stacked frames. Perfect for short stories, jokes or webtoon-style reading.',
+lay_grid_t:'4-Panel Comic Grid',lay_grid_s:'2x2 classic newspaper gag',lay_grid_g:'Manga & Newspaper',lay_grid_d:'The classic 2x2 grid for multi-scene stories and episodic pacing.',
+lay_split_t:'2-Panel Action Split',lay_split_s:'Duel & reaction sequence',lay_split_g:'Heroic Drama',lay_split_d:'A big action panel on top and an expressive reaction close-up below.',
+lay_wide_t:'Cinematic Widescreen',lay_wide_s:'16:9 movie-style panorama',lay_wide_g:'Cinema Shot',lay_wide_d:'An ultra-wide landscape panel like an anime movie scene.',
+tour1:'Draw or pick a background',tour2:'Add words and stickers',tour3:'Save, post or download',
+title_ph:'Name your comic',hint:'Tap a box to pick it, then draw. Tap a bubble or sticker to move it.',
+sel_h:'Selected',edit:'Edit text',undo:'Undo',redo:'Redo',save_lib:'Save',post:'Post to feed',download:'Download',share:'Share',
+t_draw:'Draw',t_words:'Words',t_stick:'Stickers',t_style:'Style',
+pen:'Pen',eraser:'Eraser',size:'Size',scan_h:'Sketch scanner',ink:'Make it comic-ink',bg_h:'Backgrounds',
+bg_paper:'Blank paper',bg_hero:'Hero action',bg_cyber:'Cyber city',bg_dragon:'Dragon cave',bg_school:'School hallway',bg_alien:'Alien world',clear:'Clear this box',
+say:'Say it',think:'Think it',shout:'Shout it',whisper:'Whisper it',sfx_h:'Sound effects',sfx_own:'Your own…',
+c_pow:'⚡ Powers',c_ani:'🐾 Animals',c_gear:'👑 Gear',c_fun:'🎉 Fun',
+style_h:'Color style',st0:'Original',st1:'Vibrant Webtoon',st2:'Neon Noir',st3:'Vintage Newsprint',st4:'Monochrome Ink',
+motion_h:'Camera motion',mo_none:'Still',mo_pan:'Pan & zoom',mo_shake:'Action shake',mo_breath:'Breathing',motion_exp:'Save as motion video',
+com_h:'Community Panels',com_p:'Sketches and comics from other creators. Remix any picture!',post_sketch:'Post my comic',
+com_note_local:'Be kind and keep it friendly. Posts you make here are saved on this device.',com_note_cloud:'Be kind and keep it friendly. Never share personal details like your address or phone number.',remix:'Remix',
+col_h:'Comic Collabs',col_p:'Co-author comic scripts and panels with friends.',col_new:'New collab',col_done:'Completed',col_active:'Active',col_empty:'No collabs yet. Start one and invite a friend!',col_nf:'We could not find this collab.',
+col_script:'Shared story script',col_link:'Copy invite link',col_draw:'Draw a panel',col_reopen:'Reopen',col_finish:'Mark completed',
+col_note_local:'On this device, collabs sync between your own tabs. Turn on cloud sync to write together from different devices.',col_note_cloud:'Changes sync live with everyone who has the link.',saved_ok:'Saved',
+nc_h:'New Collaborative Story',nc_title:'Comic title',nc_script:'Opening scene script',toast_copied:'Link copied!',
+prof_h:'Profile & Library',name_ph:'Pick a nickname',safe_tip:'Tip: use a nickname. Never share your real name, address, school or phone number online.',
+st_comics:'Comics',st_bm:'Bookmarks',st_posts:'Posts',st_likes:'Likes',pt_mine:'My comics',pt_bm:'Bookmarks',pt_posts:'My posts',
+shelf_empty:'Nothing here yet. Comics you save will show up here.',bm_empty:'No bookmarks yet. Open a comic and tap Bookmark.',posts_empty:'You have not posted anything yet.',
+acct_local:'Your comics are saved on this device.',acct_out:'Sign in to post and collab with others. (Sign-in is for ages 13+ or with a parent.)',acct_in:'Signed in as',sign_in:'Sign in with Google',sign_out:'Sign out',wipe:'Erase everything on this device',q_wipe:'Erase all your comics and settings from this device?',
+open:'Open',del:'Delete',dlg_ok:'Done',dlg_cancel:'Cancel',ok_yes:'Yes',
+p_speech:'What do they say?',p_thought:'What do they think?',p_shout:'What do they shout?',p_whisper:'What do they whisper?',p_sfx:'Type a sound!',p_edit:'Change the words',
+d_speech:'Hello!',d_thought:'Hmm…',d_shout:'WOW!',d_whisper:'Psst…',
+q_page:'Leave this page? Your current drawing will be lost unless you saved it.',q_clear:'Clear this box?',q_del:'Delete this?',
+toast_saved:'Saved to your library!',toast_full:'Your library is full. Delete an old comic first.',toast_photo:'Photo added! Now try “Make it comic-ink”.',toast_dl:'Your file is downloading!',
+toast_nomotion:'Your browser cannot record video. Try Chrome or Edge.',toast_rec:'Recording your motion comic… 5 seconds',
+toast_draw_first:'Draw something in the Studio first!',toast_signin:'Please sign in first.',toast_posted:'Posted to the feed!',toast_post_fail:'That did not work. Please try again.',toast_remix:'Remix ready! Make it your own.',toast_remix_fail:'Could not load that picture.',
+cc_h:'From the community',pages:'pages',nf:'We could not find this comic.',loading:'Loading…',report:'Report',rep_h:'Report this',rep_1:'Not suitable for kids',rep_2:'Shows personal information',rep_3:'Bullying or mean words',rep_4:'Something else',toast_reported:'Thank you. We will take a look.',
+pub:'Publish comic',pub_h:'Publish as a comic',pub_note:'Everyone can read published comics. Do not include personal information. Choose a comic of yours to add this page to it (up to 6 pages).',pub_new:'Start a new comic',pub_title:'Comic title',pub_syn:'What is it about?',pub_big:'This page is too big to publish. Try a simpler page.',pub_max:'A comic can have up to 6 pages.',pub_need_title:'Please give your comic a title.',toast_pub:'Your comic is published!',toast_pub_add:'Page added to your comic!',pt_pub:'Published',pub_empty:'You have not published a comic yet. Draw a page, then tap Publish comic.',
+ai_h:'AI Comic Magic',ai_manga:'Manga ink',ai_webtoon:'Color webtoon',ai_neon:'Neon noir',ai_go:'AI Comic Magic',ai_busy:'AI is drawing… (up to a minute)',ai_done:'Done! Tap Undo if you prefer the original.',ai_fail:'AI could not finish. Please try again.',ai_rate:'Too many tries. Please wait a few minutes.',ai_consent_h:'Send this picture to Google AI?',ai_consent:'To redraw your picture, it is sent to Google Gemini AI. Do not use pictures with faces or private information. If you are under 13, ask a parent first.',
+post_h:'Post to the feed',post_title:'Title',post_desc:'Tell us about it (optional)',untitled:'My comic',guest:'Guest'},
+bn:{
+nav_home:'এক্সপ্লোর',nav_studio:'স্টুডিও',nav_community:'ফিড',nav_collab:'কোল্যাব',nav_profile:'প্রোফাইল',
+hero_cap:'এদিকে, তোমার খাতায়…',hero_h1:'তোমার আঁকা। তোমার কমিক।',
+hero_p:'হাতে আঁকা স্কেচকে অ্যানিমেটেড কমিক বানাও। কথার বুদবুদ, স্টিকার আর সাউন্ড ইফেক্ট যোগ করে কমিউনিটির সাথে শেয়ার করো।',
+cta_draw:'আঁকা শুরু করো',cta_read:'কমিক পড়ো',
+promo_h:'কাগজে আঁকো। স্ক্যান করো। জীবন্ত করো।',promo_p:'খাতার স্কেচের ছবি তোলো। আমরা কাগজ সাদা করে পেন্সিলের দাগ গাঢ় কমিক-কালিতে বদলে দেব।',
+snap:'স্কেচের ছবি তোলো',photo:'ছবি বাছাই করো',cont_h:'পড়া চালিয়ে যাও',feat_h:'সেরা কমিক ও ওয়েবটুন',search_ph:'কমিক, লেখক বা ধরন খোঁজো…',all:'সব',no_match:'কোনো কমিক মেলেনি।',
+foot:'সব বয়সের শিল্পীদের জন্য। তুমি পোস্ট না করলে তোমার আঁকা শুধু তোমার ডিভাইসেই থাকে।',
+by:'লেখক',chap:'প্যানেল',back:'ফিরে যাও',rate_h:'কমিকটি রেট দাও',bookmark:'বুকমার্ক',bookmarked:'বুকমার্ক করা',
+end_ch:'প্রথম অধ্যায় শেষ',end_p:'ভালো লেগেছে? এবার নিজের গল্প আঁকো।',make_own:'নিজের কমিক বানাও',
+cmt_h:'মন্তব্য',cmt_ph:'ভালো কিছু লেখো…',cmt_go:'পোস্ট',toast_bm:'বুকমার্ক হয়েছে! তোমার পড়ার জায়গা মনে রাখব।',toast_unbm:'বুকমার্ক সরানো হয়েছে।',
+pick_h:'তোমার পেজ বাছাই করো',pick_p:'নতুন কমিক শুরু করতে একটা লেআউট বাছো। পরে বদলাতেও পারবে।',proj_h:'আমার সেভ করা কমিক',layouts:'লেআউট',
+lay_single_t:'একটি বড় প্যানেল',lay_single_s:'স্প্ল্যাশ আর্ট ও কভার',lay_single_g:'ক্লাসিক স্প্ল্যাশ',
+lay_strip_t:'৩-প্যানেল স্ট্রিপ',lay_strip_s:'শুরু • সমস্যা • হাসির শেষ',lay_strip_g:'ওয়েবটুন ও ডেইলি স্ট্রিপ',
+lay_grid_t:'৪-প্যানেল গ্রিড',lay_grid_s:'২x২ ক্লাসিক গ্যাগ',lay_grid_g:'ম্যাঙ্গা ও পত্রিকা',
+lay_split_t:'২-প্যানেল অ্যাকশন',lay_split_s:'লড়াই আর প্রতিক্রিয়া',lay_split_g:'হিরোইক ড্রামা',
+lay_wide_t:'সিনেমাটিক ওয়াইডস্ক্রিন',lay_wide_s:'১৬:৯ সিনেমার মতো',lay_wide_g:'সিনেমা শট',
+tour1:'আঁকো বা ব্যাকগ্রাউন্ড বাছো',tour2:'কথা আর স্টিকার যোগ করো',tour3:'সেভ, পোস্ট বা ডাউনলোড',
+title_ph:'কমিকের নাম দাও',hint:'বক্সে ট্যাপ করে আঁকো। বুদবুদ বা স্টিকারে ট্যাপ করে সরাও।',
+sel_h:'বাছাই করা',edit:'লেখা বদলাও',undo:'আগের ধাপ',redo:'পরের ধাপ',save_lib:'সেভ',post:'ফিডে পোস্ট',download:'ডাউনলোড',share:'শেয়ার',
+t_draw:'আঁকো',t_words:'কথা',t_stick:'স্টিকার',t_style:'স্টাইল',
+pen:'কলম',eraser:'রাবার',size:'সাইজ',scan_h:'স্কেচ স্ক্যানার',ink:'কমিক-কালি করো',bg_h:'ব্যাকগ্রাউন্ড',
+bg_paper:'সাদা কাগজ',bg_hero:'হিরো অ্যাকশন',bg_cyber:'সাইবার শহর',bg_dragon:'ড্রাগনের গুহা',bg_school:'স্কুলের করিডর',bg_alien:'ভিনগ্রহ',clear:'বক্স মুছে ফেলো',
+say:'বলো',think:'ভাবো',shout:'চিৎকার',whisper:'ফিসফিস',sfx_h:'সাউন্ড ইফেক্ট',sfx_own:'নিজের…',
+c_pow:'⚡ শক্তি',c_ani:'🐾 প্রাণী',c_gear:'👑 সাজ',c_fun:'🎉 মজা',
+style_h:'রঙের স্টাইল',st0:'আসল',st1:'ঝলমলে ওয়েবটুন',st2:'নিয়ন নোয়ার',st3:'পুরনো পত্রিকা',st4:'মনোক্রোম কালি',
+motion_h:'ক্যামেরা মোশন',mo_none:'স্থির',mo_pan:'প্যান ও জুম',mo_shake:'অ্যাকশন কাঁপুনি',mo_breath:'শ্বাস',motion_exp:'মোশন ভিডিও সেভ করো',
+com_h:'কমিউনিটি প্যানেল',com_p:'অন্য শিল্পীদের স্কেচ আর কমিক। যেকোনো ছবি রিমিক্স করো!',post_sketch:'আমার কমিক পোস্ট',
+com_note_local:'ভদ্র ও বন্ধুসুলভ থাকো। এখানকার পোস্ট এই ডিভাইসে সেভ হয়।',com_note_cloud:'ভদ্র ও বন্ধুসুলভ থাকো। ঠিকানা বা ফোন নম্বরের মতো ব্যক্তিগত তথ্য কখনো দিও না।',remix:'রিমিক্স',
+col_h:'কমিক কোল্যাব',col_p:'বন্ধুদের সাথে মিলে কমিকের স্ক্রিপ্ট আর প্যানেল লেখো।',col_new:'নতুন কোল্যাব',col_done:'শেষ',col_active:'চলছে',col_empty:'এখনো কোনো কোল্যাব নেই। একটা শুরু করে বন্ধুকে ডাকো!',col_nf:'এই কোল্যাব খুঁজে পাইনি।',
+col_script:'গল্পের স্ক্রিপ্ট',col_link:'আমন্ত্রণ লিংক কপি',col_draw:'প্যানেল আঁকো',col_reopen:'আবার খোলো',col_finish:'শেষ করো',saved_ok:'সেভ হয়েছে',
+nc_h:'নতুন যৌথ গল্প',nc_title:'কমিকের নাম',nc_script:'প্রথম দৃশ্যের স্ক্রিপ্ট',toast_copied:'লিংক কপি হয়েছে!',
+prof_h:'প্রোফাইল ও লাইব্রেরি',name_ph:'একটা ডাকনাম দাও',safe_tip:'টিপ: ডাকনাম ব্যবহার করো। অনলাইনে আসল নাম, ঠিকানা, স্কুল বা ফোন নম্বর কখনো দিও না।',
+st_comics:'কমিক',st_bm:'বুকমার্ক',st_posts:'পোস্ট',st_likes:'লাইক',pt_mine:'আমার কমিক',pt_bm:'বুকমার্ক',pt_posts:'আমার পোস্ট',
+shelf_empty:'এখানে এখনো কিছু নেই। তোমার সেভ করা কমিক এখানে দেখা যাবে।',bm_empty:'এখনো কোনো বুকমার্ক নেই।',posts_empty:'তুমি এখনো কিছু পোস্ট করোনি।',
+acct_local:'তোমার কমিক এই ডিভাইসে সেভ থাকে।',sign_in:'গুগল দিয়ে সাইন ইন',sign_out:'সাইন আউট',wipe:'এই ডিভাইসের সব মুছে ফেলো',q_wipe:'এই ডিভাইস থেকে সব কমিক আর সেটিংস মুছে ফেলবে?',
+open:'খোলো',del:'মুছো',dlg_ok:'ঠিক আছে',dlg_cancel:'বাতিল',ok_yes:'হ্যাঁ',
+p_speech:'ও কী বলছে?',p_thought:'ও কী ভাবছে?',p_shout:'ও কী চিৎকার করছে?',p_whisper:'ও কী ফিসফিস করছে?',p_sfx:'একটা শব্দ লেখো!',p_edit:'লেখা বদলাও',
+d_speech:'হ্যালো!',d_thought:'হুম…',d_shout:'ওয়াও!',d_whisper:'শশশ…',
+q_page:'এই পেজ ছেড়ে যাবে? সেভ না করলে তোমার আঁকা হারিয়ে যাবে।',q_clear:'এই বক্স মুছে ফেলবে?',q_del:'এটা মুছে ফেলবে?',
+toast_saved:'তোমার লাইব্রেরিতে সেভ হয়েছে!',toast_full:'লাইব্রেরি ভরে গেছে। আগে একটা পুরনো কমিক মুছো।',toast_photo:'ছবি যোগ হয়েছে! এবার “কমিক-কালি করো” চাপো।',toast_dl:'ফাইল ডাউনলোড হচ্ছে!',
+toast_draw_first:'আগে স্টুডিওতে কিছু আঁকো!',toast_posted:'ফিডে পোস্ট হয়েছে!',toast_remix:'রিমিক্স তৈরি! এবার নিজের মতো করো।',
+acct_out:'অন্যদের সাথে পোস্ট ও কোল্যাব করতে সাইন ইন করো। (সাইন ইন ১৩+ বছর বয়সীদের জন্য, বা বাবা-মায়ের সাথে।)',acct_in:'সাইন ইন করা আছে:',col_note_local:'এই ডিভাইসে কোল্যাব তোমার নিজের ট্যাবগুলোর মধ্যে সিঙ্ক হয়। আলাদা ডিভাইস থেকে একসাথে লিখতে ক্লাউড সিঙ্ক চালু করতে হবে।',col_note_cloud:'লিংক আছে এমন সবার সাথে পরিবর্তন সাথে সাথে সিঙ্ক হয়।',
+toast_nomotion:'তোমার ব্রাউজার ভিডিও রেকর্ড করতে পারে না। Chrome বা Edge চেষ্টা করো।',toast_rec:'মোশন কমিক রেকর্ড হচ্ছে… ৫ সেকেন্ড',toast_signin:'আগে সাইন ইন করো।',toast_post_fail:'কাজ হয়নি। আবার চেষ্টা করো।',toast_remix_fail:'ছবিটি লোড করা যায়নি।',
+cc_h:'কমিউনিটির কমিক',pages:'পৃষ্ঠা',nf:'এই কমিক খুঁজে পাইনি।',loading:'লোড হচ্ছে…',report:'রিপোর্ট',rep_h:'এটা রিপোর্ট করো',rep_1:'ছোটদের জন্য ঠিক নয়',rep_2:'ব্যক্তিগত তথ্য আছে',rep_3:'খারাপ ব্যবহার বা গালি',rep_4:'অন্য কিছু',toast_reported:'ধন্যবাদ। আমরা দেখব।',
+pub:'কমিক প্রকাশ',pub_h:'কমিক হিসেবে প্রকাশ করো',pub_note:'প্রকাশ করা কমিক সবাই পড়তে পারবে। ব্যক্তিগত তথ্য দিও না। নিজের আগের কমিক বেছে নিলে এই পেজ সেটাতে যোগ হবে (সর্বোচ্চ ৬ পৃষ্ঠা)।',pub_new:'নতুন কমিক শুরু',pub_title:'কমিকের নাম',pub_syn:'এটা কী নিয়ে?',pub_big:'এই পেজ প্রকাশের জন্য বড় বেশি। সহজ একটা পেজ চেষ্টা করো।',pub_max:'একটা কমিকে সর্বোচ্চ ৬ পৃষ্ঠা থাকতে পারে।',pub_need_title:'কমিকের একটা নাম দাও।',toast_pub:'তোমার কমিক প্রকাশ হয়েছে!',toast_pub_add:'তোমার কমিকে পেজ যোগ হয়েছে!',pt_pub:'প্রকাশিত',pub_empty:'এখনো কোনো কমিক প্রকাশ করোনি। একটা পেজ এঁকে “কমিক প্রকাশ” চাপো।',
+ai_h:'এআই কমিক ম্যাজিক',ai_manga:'ম্যাঙ্গা কালি',ai_webtoon:'রঙিন ওয়েবটুন',ai_neon:'নিয়ন নোয়ার',ai_go:'এআই কমিক ম্যাজিক',ai_busy:'এআই আঁকছে… (এক মিনিট পর্যন্ত লাগতে পারে)',ai_done:'হয়ে গেছে! আসলটা চাইলে “আগের ধাপ” চাপো।',ai_fail:'এআই শেষ করতে পারেনি। আবার চেষ্টা করো।',ai_rate:'অনেকবার চেষ্টা হয়েছে। কয়েক মিনিট অপেক্ষা করো।',ai_consent_h:'এই ছবি গুগল এআই-কে পাঠাবে?',ai_consent:'ছবি নতুন করে আঁকতে এটা Google Gemini এআই-কে পাঠানো হয়। মুখ বা ব্যক্তিগত তথ্য আছে এমন ছবি দিও না। ১৩ বছরের কম বয়স হলে আগে বাবা-মাকে জিজ্ঞেস করো।',
+post_h:'ফিডে পোস্ট করো',post_title:'নাম',post_desc:'এটা নিয়ে কিছু লেখো (ইচ্ছে হলে)',untitled:'আমার কমিক',guest:'অতিথি'}};
 
-function build(n){
-  cur=n; const [c,r]=LAY[n], b=$("#board"); b.innerHTML=""; panels=[]; active=0;
-  b.style.gridTemplateColumns=`repeat(${c},1fr)`;
-  b.style.maxWidth=(c===1&&r===1?560:c===1?460:900)+"px"; b.style.margin="0 auto";
-  for(let i=0;i<n;i++){
-    const el=document.createElement("div"); el.className="panel"; const cv=document.createElement("canvas");
-    cv.width=cv.height=S; el.append(cv); b.append(el);
-    const p={el,cv,ctx:cv.getContext("2d"),hist:[]}; panels.push(p);
-    el.addEventListener("pointerdown",()=>select(i));
-    draw(p);
-  }
-  select(0);
+/* ===== core ===== */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const newId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const iso=()=>new Date().toISOString();
+
+/* language */
+let lang=LS.get('cc_lang','en');
+const t=k=>(I[lang]&&I[lang][k])||I.en[k]||k;
+function applyLang(root){
+  document.documentElement.lang=lang;
+  $$('[data-i18n]',root).forEach(e=>e.textContent=t(e.dataset.i18n));
+  $$('[data-i18n-ph]',root).forEach(e=>e.placeholder=t(e.dataset.i18nPh));
+  $('#langB').textContent=lang==='en'?'বাং':'EN';
 }
-function select(i){active=i;panels.forEach((p,k)=>p.el.classList.toggle("active",k===i))}
-function snap(p){p.hist.push(p.ctx.getImageData(0,0,S,S));if(p.hist.length>25)p.hist.shift()}
 
-function draw(p){
-  const cv=p.cv; let down=false,last;
-  const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*S/r.width,(e.clientY-r.top)*S/r.height]};
-  cv.addEventListener("pointerdown",e=>{down=true;cv.setPointerCapture(e.pointerId);snap(p);last=pos(e);dot(p,last,last)});
-  cv.addEventListener("pointermove",e=>{if(!down)return;const n=pos(e);dot(p,last,n);last=n});
-  ["pointerup","pointercancel"].forEach(t=>cv.addEventListener(t,()=>down=false));
-}
-function dot(p,a,b){
-  const x=p.ctx; x.lineCap=x.lineJoin="round"; x.lineWidth=size;
-  x.globalCompositeOperation=tool==="eraser"?"destination-out":"source-over"; x.strokeStyle=color;
-  x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0]+.01,b[1]);x.stroke();
-}
+/* theme */
+function setTheme(m){document.documentElement.dataset.theme=m;LS.set('cc_theme',m);const mt=$('meta[name=theme-color]');if(mt)mt.content=m==='dark'?'#0F101A':'#F8F9FD'}
 
-// colors, stickers
-COLORS.forEach((c,i)=>{const b=document.createElement("button");b.className="sw"+(i?"":" on");b.style.background=c;b.setAttribute("aria-label","Color "+(i+1));
-  b.onclick=()=>{color=c;tool="pen";setTool();document.querySelectorAll(".sw").forEach(s=>s.classList.toggle("on",s===b))};$("#colors").append(b)});
-STICKERS.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.setAttribute("aria-label","Add sticker "+s);b.onclick=()=>addItem("sticker",s);$("#stickers").append(b)});
-function setTool(){$("#pen").classList.toggle("on",tool==="pen");$("#eraser").classList.toggle("on",tool==="eraser")}
-$("#pen").onclick=()=>{tool="pen";setTool()}; $("#eraser").onclick=()=>{tool="eraser";setTool()};
-$("#size").oninput=e=>size=+e.target.value;
-$("#undo").onclick=()=>{const p=panels[active],h=p.hist.pop();if(h)p.ctx.putImageData(h,0,0)};
-$("#clear").onclick=()=>{const p=panels[active];snap(p);p.ctx.clearRect(0,0,S,S);p.el.querySelectorAll(".item").forEach(i=>i.remove())};
-document.querySelectorAll("#layouts button").forEach(b=>b.onclick=()=>{
-  if(panels.some(p=>p.hist.length||p.el.querySelector(".item"))&&!confirm("Start a new page? Your current comic will be erased."))return;
-  document.querySelectorAll("#layouts button").forEach(x=>x.classList.toggle("on",x===b));build(+b.dataset.l)});
-
-// bubbles & stickers
-function addItem(kind,text){
-  const p=panels[active], it=document.createElement("div");
-  it.className="item pop "+(kind==="sticker"?"sticker":"bubble "+kind); it.dataset.kind=kind;
-  it.style.left="50%";it.style.top="50%";
-  const t=document.createElement("span");t.textContent=text;it.append(t);
-  const x=document.createElement("button");x.className="x";x.textContent="✖";x.setAttribute("aria-label","Delete");
-  x.onpointerdown=e=>{e.stopPropagation();it.remove()};it.append(x);
-  let drag=false,moved=false,box;
-  it.onpointerdown=e=>{drag=true;moved=false;box=p.el.getBoundingClientRect();it.setPointerCapture(e.pointerId);
-    document.querySelectorAll(".item").forEach(i=>i.classList.remove("sel"));it.classList.add("sel")};
-  it.onpointermove=e=>{if(!drag)return;moved=true;
-    it.style.left=Math.min(100,Math.max(0,(e.clientX-box.left)/box.width*100))+"%";
-    it.style.top=Math.min(100,Math.max(0,(e.clientY-box.top)/box.height*100))+"%"};
-  it.onpointerup=()=>{drag=false;if(!moved&&kind!=="sticker"){const v=prompt("What do they say?",t.textContent);if(v)t.textContent=v}};
-  p.el.append(it);
-}
-$("#speech").onclick=()=>{const v=prompt("What do they say?","Hello!");if(v)addItem("speech",v)};
-$("#thought").onclick=()=>{const v=prompt("What do they think?","Hmm...");if(v)addItem("thought",v)};
-
-// photo -> comic ink
-$("#file").onchange=e=>{
-  const f=e.target.files[0];if(!f)return;const img=new Image();
-  img.onload=()=>{const p=panels[active];snap(p);const k=Math.max(S/img.width,S/img.height),w=img.width*k,h=img.height*k;
-    p.ctx.globalCompositeOperation="source-over";p.ctx.fillStyle="#fff";p.ctx.fillRect(0,0,S,S);p.ctx.drawImage(img,(S-w)/2,(S-h)/2,w,h);URL.revokeObjectURL(img.src)};
-  img.src=URL.createObjectURL(f);e.target.value="";
-};
-$("#ink").onclick=()=>{
-  const p=panels[active];snap(p);const d=p.ctx.getImageData(0,0,S,S),a=d.data;
-  for(let i=0;i<a.length;i+=4){const g=.3*a[i]+.59*a[i+1]+.11*a[i+2];let v=(g-120)*2.4+120;v=v>165?255:Math.max(0,v);a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
-  p.ctx.putImageData(d,0,0);
-};
-
-// save as PNG
-function wrap(x,t,max){const w=t.split(" "),L=[];let l="";w.forEach(s=>{const n=l?l+" "+s:s;if(x.measureText(n).width>max&&l){L.push(l);l=s}else l=n});L.push(l);return L}
-$("#save").onclick=()=>{
-  const [c,r]=LAY[cur],G=16,W=c*S+(c+1)*G,H=r*S+(r+1)*G,cv=document.createElement("canvas");cv.width=W;cv.height=H;
-  const x=cv.getContext("2d");x.fillStyle="#1B1B2F";x.fillRect(0,0,W,H);
-  panels.forEach((p,i)=>{
-    const ox=G+(i%c)*(S+G),oy=G+Math.floor(i/c)*(S+G);x.fillStyle="#fff";x.fillRect(ox,oy,S,S);x.drawImage(p.cv,ox,oy);
-    x.save();x.beginPath();x.rect(ox,oy,S,S);x.clip();
-    p.el.querySelectorAll(".item").forEach(it=>{
-      const px=ox+parseFloat(it.style.left)/100*S,py=oy+parseFloat(it.style.top)/100*S,txt=it.firstChild.textContent;
-      x.textAlign="center";x.textBaseline="middle";
-      if(it.dataset.kind==="sticker"){x.font=`${.12*S}px serif`;x.fillStyle="#000";x.fillText(txt,px,py);return}
-      const fs=.045*S;x.font=`700 ${fs}px "Comic Neue","Comic Sans MS",sans-serif`;
-      const L=wrap(x,txt,.44*S),w=Math.max(...L.map(s=>x.measureText(s).width))+.06*S,h=L.length*fs*1.2+.032*S;
-      x.fillStyle="#fff";x.strokeStyle="#1B1B2F";x.lineWidth=.007*S*1.4;x.beginPath();
-      if(it.dataset.kind==="thought")x.ellipse(px,py,w*.62,h*.7,0,0,7);else x.roundRect(px-w/2,py-h/2,w,h,.03*S);
-      x.fill();x.stroke();x.fillStyle="#1B1B2F";
-      L.forEach((s,k)=>x.fillText(s,px,py-(L.length-1)*fs*.6+k*fs*1.2));
-    });x.restore();
+/* toast & dialog */
+let tt;function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),3000)}
+const dlg=$('#dlg');
+function ask({title,text,fields=[],confirm,okText}){
+  return new Promise(res=>{
+    $('#dlgT').textContent=title;const box=$('#dlgF');box.innerHTML='';
+    if(text){const p=document.createElement('p');p.textContent=text;p.style.margin='0 0 12px';box.append(p)}
+    const els=fields.map(f=>{let e;if(f.select){e=document.createElement('select');f.select.forEach(o=>{const op=document.createElement('option');op.value=o.v;op.textContent=o.l;e.append(op)});e.value=f.value!=null?f.value:f.select[0].v}else{e=document.createElement(f.area?'textarea':'input');e.maxLength=f.max||120;e.placeholder=f.ph||'';e.value=f.value||'';if(f.area)e.rows=4}e.className='field';e.setAttribute('aria-label',f.ph||title);box.append(e);return e});
+    $('#dlgOk').textContent=okText||(confirm?t('ok_yes'):t('dlg_ok'));$('#dlgNo').textContent=t('dlg_cancel');
+    const done=()=>{dlg.removeEventListener('close',done);if(dlg.returnValue!=='ok')return res(null);res(confirm?true:els.map(e=>e.value.trim()))};
+    dlg.addEventListener('close',done);dlg.showModal();if(els[0]){els[0].focus();if(els[0].select)els[0].select()}
   });
-  const a=document.createElement("a");a.download="my-comic.png";a.href=cv.toDataURL("image/png");a.click();
+}
+const ask1=async(title,value)=>{const r=await ask({title,fields:[{value}]});return r&&r[0]?r[0]:null};
+
+/* database: local (always) + optional cloud (Firebase) for the shared collections */
+function makeLocal(){
+  const subs={},rd=c=>LS.get('cc_db_'+c,[]),emit=c=>(subs[c]||[]).forEach(f=>f(rd(c)));
+  addEventListener('storage',e=>{if(e.key&&e.key.indexOf('cc_db_')===0)emit(e.key.slice(6))});
+  return{mode:'local',user:null,
+    sub(c,f){(subs[c]=subs[c]||[]).push(f);f(rd(c));return()=>{subs[c]=(subs[c]||[]).filter(x=>x!==f)}},
+    put(c,doc){const l=rd(c),i=l.findIndex(d=>d.id===doc.id);if(i>=0)l[i]=doc;else l.unshift(doc);const ok=LS.set('cc_db_'+c,l);emit(c);return Promise.resolve(ok)},
+    del(c,id){LS.set('cc_db_'+c,rd(c).filter(d=>d.id!==id));emit(c);return Promise.resolve(true)},
+    inc(c,id,f,d){const l=rd(c),x=l.find(o=>o.id===id);if(x){x[f]=Math.max(0,(x[f]||0)+d);LS.set('cc_db_'+c,l);emit(c)}return Promise.resolve(!!x)},
+    get:(c,id)=>rd(c).find(d=>d.id===id)};
+}
+const LOCAL=makeLocal();
+let DB=makeLocal();
+const unsubs={};
+function subscribe(key,db,col,fn){if(unsubs[key])unsubs[key]();unsubs[key]=db.sub(col,fn)}
+
+async function enableFirebase(cfg){
+  const base='https://www.gstatic.com/firebasejs/10.12.2/';
+  const [A,F,AU]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-firestore.js'),import(base+'firebase-auth.js')]);
+  const app=A.initializeApp(cfg),fs=cfg.firestoreDatabaseId?F.getFirestore(app,cfg.firestoreDatabaseId):F.getFirestore(app),auth=AU.getAuth(app);
+  const cache={},api={mode:'firebase',user:null};
+  api.sub=(c,f)=>F.onSnapshot(F.query(F.collection(fs,c),F.orderBy('updatedAt','desc'),F.limit(60)),s=>{cache[c]=s.docs.map(d=>({...d.data(),id:d.id}));f(cache[c])},e=>console.warn('Firestore',e.code));
+  api.put=async(c,doc)=>{try{const {id,...rest}=doc;await F.setDoc(F.doc(fs,c,id),rest);return true}catch(e){console.warn(e);return false}};
+  api.del=async(c,id)=>{try{await F.deleteDoc(F.doc(fs,c,id));return true}catch(e){return false}};
+  api.get=(c,id)=>(cache[c]||[]).find(d=>d.id===id);
+  api.inc=async(c,id,f,d)=>{try{await F.updateDoc(F.doc(fs,c,id),{[f]:F.increment(d)});return true}catch(e){console.warn(e);return false}};
+  api.signIn=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider());
+  api.signOut=()=>AU.signOut(auth);
+  AU.onAuthStateChanged(auth,u=>{api.user=u;if(typeof onAuthChange==='function')onAuthChange()});
+  DB=api;
+  if(typeof startShared==='function')startShared();
+  if(typeof onAuthChange==='function')onAuthChange();
+}
+
+/* profile */
+const AVATARS=['🦸','🐱','🦊','🐼','🦄','🐸','🤖','🧑‍🎨'];
+function prof(){let p=LS.get('cc_profile');if(!p){p={id:newId('u'),name:'',avatar:'🦸'};LS.set('cc_profile',p)}return p}
+function me(){const p=prof(),u=DB.user;return{id:u?u.uid:p.id,name:p.name||(u&&u.displayName?u.displayName.split(' ')[0]:'')||t('guest'),avatar:p.avatar}}
+
+/* likes */
+const liked=id=>LS.get('cc_likes',[]).includes(id);
+function toggleLike(id){const l=LS.get('cc_likes',[]),i=l.indexOf(id);if(i>=0)l.splice(i,1);else l.push(id);LS.set('cc_likes',l);return i<0}
+const hue=s=>{let h=0;for(const ch of String(s))h=(h*31+ch.charCodeAt(0))%360;return h};
+
+/* ===== art ===== */
+const S=600,INK='#16172A',FF='"Baloo 2","Baloo Da 2","Trebuchet MS",sans-serif',EMO='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(r,w/2,h/2);this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath()}}
+function wrapText(c,txt,max){const out=[];let l='';txt.split(/\s+/).forEach(w=>{const n=l?l+' '+w:w;if(c.measureText(n).width>max&&l){out.push(l);l=w}else l=n});if(l)out.push(l);return out.length?out:['']}
+
+/* one drawing routine for studio, reader and export */
+function drawItem(c,it,W,H,sel,exp){
+  const k=W/400,sc=(it.s||1)*(exp||it.pop==null?1:it.pop);
+  c.save();c.translate(it.x*W,it.y*H);c.rotate((it.r||0)*Math.PI/180);c.scale(sc,sc);
+  c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineCap='round';
+  let w=0,h=0;
+  if(it.t==='sticker'){
+    const fs=64*k;c.font=`${fs}px ${EMO}`;c.fillStyle='#000';c.fillText(it.text,0,0);w=h=fs*1.15;
+  }else if(it.t==='sfx'){
+    const fs=62*k;c.font=`${fs}px Bangers,Impact,sans-serif`;w=c.measureText(it.text).width;h=fs;
+    c.rotate(-.08);c.lineWidth=fs*.22;c.strokeStyle='#000';c.strokeText(it.text,0,0);
+    c.lineWidth=fs*.08;c.strokeStyle='#fff';c.strokeText(it.text,0,0);
+    c.fillStyle=it.c||'#FF5722';c.fillText(it.text,0,0);w+=fs*.3;
+  }else{
+    const shout=it.t==='shout',whisper=it.t==='whisper',fs=(shout?26:whisper?19:22)*k;
+    c.font=`${whisper?'600 italic':'800'} ${fs}px ${FF}`;
+    const txt=shout?it.text.toUpperCase():it.text,L=wrapText(c,txt,175*k),lw=Math.max(...L.map(l=>c.measureText(l).width));
+    w=lw+30*k;h=L.length*fs*1.15+20*k;const lwid=3.4*k;
+    c.lineWidth=lwid;c.strokeStyle=INK;c.fillStyle=whisper?'#FAFAFA':'#fff';
+    if(it.t==='speech'){
+      c.beginPath();c.moveTo(-w*.34,h/2-2*k);c.lineTo(-w*.44,h/2+20*k);c.lineTo(-w*.12,h/2-2*k);c.closePath();c.fill();c.stroke();
+      c.beginPath();c.roundRect(-w/2,-h/2,w,h,16*k);c.fill();c.stroke();
+      c.fillStyle='#fff';c.fillRect(-w*.34+lwid*.9,h/2-lwid*.75,w*.22-lwid*1.8,lwid*1.5);
+    }else if(whisper){
+      c.setLineDash([7*k,5*k]);c.beginPath();c.roundRect(-w/2,-h/2,w,h,14*k);c.fill();c.stroke();c.setLineDash([]);
+    }else if(it.t==='thought'){
+      c.beginPath();c.ellipse(0,0,w*.64,h*.8,0,0,Math.PI*2);c.fill();c.stroke();
+      [[-w*.46,h*.86,8],[-w*.55,h*1.06,5]].forEach(([x,y,r])=>{c.beginPath();c.arc(x,y,r*k,0,7);c.fill();c.stroke()});h*=1.25;w*=1.2;
+    }else{
+      const n=13;c.beginPath();for(let i=0;i<n*2;i++){const a=i*Math.PI/n,r=i%2?.74:1,x=Math.cos(a)*w*.78*r,y=Math.sin(a)*h*1.02*r;i?c.lineTo(x,y):c.moveTo(x,y)}
+      c.closePath();c.fillStyle='#FDCB6E';c.fill();c.stroke();w*=1.5;h*=1.9;
+    }
+    c.fillStyle=whisper?'#555a7a':INK;const lh=fs*1.15,y0=-(L.length-1)*lh/2;L.forEach((l,i)=>c.fillText(l,0,y0+i*lh+k));
+  }
+  if(sel){c.setLineDash([8*k,6*k]);c.lineWidth=3*k;c.strokeStyle='#FDCB6E';c.shadowColor='#000';c.shadowBlur=3;c.beginPath();c.roundRect(-w/2-8*k,-h/2-8*k,w+16*k,h+16*k,10*k);c.stroke()}
+  c.restore();
+  if(!exp)it.bb={x:it.x*W,y:it.y*H,w:w*sc,h:h*sc};
+}
+
+/* backgrounds (the app's "sketch templates") */
+const BGS=['bg_paper','bg_hero','bg_cyber','bg_dragon','bg_school','bg_alien'];
+function rng(seed){return()=>(seed=(seed*16807)%2147483647)/2147483647}
+function poly(c,pts,fill){c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=fill;c.fill()}
+function drawBG(c,W,H,i){
+  c.save();c.globalCompositeOperation='source-over';c.fillStyle='#fff';c.fillRect(0,0,W,H);
+  const r=rng(11+i*7),lg=(a,b,s)=>{const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,a);if(s)g.addColorStop(.6,s);g.addColorStop(1,b);return g};
+  if(i===1){ // hero action: speed lines
+    c.fillStyle=lg('#FFE29A','#FF8A3D');c.fillRect(0,0,W,H);
+    for(let n=0;n<70;n++){const a=n/70*6.2832,a2=a+.035;c.fillStyle=n%2?'rgba(255,255,255,.55)':'rgba(255,87,34,.35)';
+      c.beginPath();c.moveTo(W/2,H/2);c.lineTo(W/2+Math.cos(a)*W,H/2+Math.sin(a)*W);c.lineTo(W/2+Math.cos(a2)*W,H/2+Math.sin(a2)*W);c.fill()}
+    c.fillStyle='rgba(255,255,255,.85)';c.beginPath();c.arc(W/2,H/2,Math.min(W,H)*.12,0,7);c.fill();
+  }else if(i===2){ // cyber city
+    c.fillStyle=lg('#0F101A','#FD79A8','#3b2f8f');c.fillRect(0,0,W,H);
+    for(let n=0;n<50;n++){c.fillStyle='rgba(255,255,255,.7)';c.fillRect(r()*W,r()*H*.45,2,2)}
+    let x=-10;while(x<W){const bw=36+r()*64,bh=H*(.22+r()*.45);c.fillStyle='#0b0b1e';c.fillRect(x,H-bh,bw,bh);
+      for(let wy=H-bh+10;wy<H-16;wy+=17)for(let wx=x+7;wx<x+bw-9;wx+=13)if(r()>.5){c.fillStyle=['#00CEC9','#FDCB6E','#FD79A8'][Math.floor(r()*3)];c.fillRect(wx,wy,6,9)}
+      x+=bw+3}
+    c.fillStyle='#00CEC9';c.fillRect(W*.1,H*.5,W*.22,5);c.fillStyle='#FD79A8';c.fillRect(W*.62,H*.4,W*.2,5);
+  }else if(i===3){ // dragon cave
+    const g=c.createRadialGradient(W/2,H*.72,10,W/2,H*.72,W*.85);g.addColorStop(0,'#ffb347');g.addColorStop(.35,'#7a3414');g.addColorStop(1,'#1b0d08');c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.fillStyle='#120804';for(let n=0;n<9;n++){const x=n/8*W,w=40+r()*50,h=H*(.1+r()*.22);poly(c,[[x-w/2,0],[x+w/2,0],[x,h]],'#120804')}
+    poly(c,[[0,0],[W*.2,0],[W*.1,H*.55],[0,H]],'#120804');poly(c,[[W,0],[W*.8,0],[W*.9,H*.55],[W,H]],'#120804');
+    for(let n=0;n<70;n++){c.fillStyle=n%3?'#FDCB6E':'#FF5722';c.beginPath();c.arc(W*.15+r()*W*.7,H*(.82+r()*.16),4+r()*7,0,7);c.fill()}
+  }else if(i===4){ // school hallway
+    const vx=W/2,vy=H*.46,bw=W*.1,bh=H*.08,L=(a,b,u)=>a+(b-a)*u;
+    c.fillStyle='#e8ecf5';c.fillRect(0,0,W,H);
+    poly(c,[[0,0],[W,0],[vx+bw,vy-bh],[vx-bw,vy-bh]],'#dfe4f1');poly(c,[[0,H],[W,H],[vx+bw,vy+bh],[vx-bw,vy+bh]],'#c49a6c');
+    c.fillStyle='#b8c2da';c.fillRect(vx-bw,vy-bh,bw*2,bh*2);
+    const ts=[0,.28,.5,.66,.78,.87,.94,1];
+    for(let n=0;n<ts.length-1;n++){const col=n%2?'#00CEC9':'#6C5CE7';
+      [[0,vx-bw],[W,vx+bw]].forEach(([e,v])=>{const f=u=>[L(e,v,u),L(0,vy-bh,u),L(H,vy+bh,u)];
+        const a=f(ts[n]),b=f(ts[n+1]),pa=(a[2]-a[1])*.1,pb=(b[2]-b[1])*.1;
+        poly(c,[[a[0],a[1]+(a[2]-a[1])*.14],[b[0],b[1]+(b[2]-b[1])*.14],[b[0],b[2]-pb],[a[0],a[2]-pa]],col)})}
+  }else if(i===5){ // alien world
+    c.fillStyle=lg('#1b1464','#00CEC9','#7b2ff7');c.fillRect(0,0,W,H);
+    for(let n=0;n<60;n++){c.fillStyle='rgba(255,255,255,.8)';c.fillRect(r()*W,r()*H*.55,2,2)}
+    const px=W*.72,py=H*.3,pr=Math.min(W,H)*.2,g=c.createRadialGradient(px-pr*.3,py-pr*.3,4,px,py,pr);g.addColorStop(0,'#FFE29A');g.addColorStop(1,'#FD79A8');
+    c.fillStyle=g;c.beginPath();c.arc(px,py,pr,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=6;c.beginPath();c.ellipse(px,py,pr*1.6,pr*.35,-.3,0,7);c.stroke();
+    c.fillStyle='#e6e1ff';c.beginPath();c.arc(W*.2,H*.2,pr*.25,0,7);c.fill();
+    const m=(col,base,amp)=>{c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=W/12)c.lineTo(x,H*base-r()*H*amp);c.lineTo(W,H);c.fillStyle=col;c.fill()};m('#2d2a6e',.72,.14);m('#1f1b4d',.84,.1);
+  }
+  c.restore();
+}
+
+/* color styles (same look in preview via CSS and in the saved picture) */
+const STYLES=['st0','st1','st2','st3','st4'];
+function stylize(x,ox,oy,w,h,s){
+  if(!s)return;const d=x.getImageData(ox,oy,w,h),a=d.data;
+  for(let i=0;i<a.length;i+=4){let r=a[i],g=a[i+1],b=a[i+2];const l=.299*r+.587*g+.114*b;
+    if(s===1){r=l+(r-l)*1.45;g=l+(g-l)*1.45;b=l+(b-l)*1.45;r=(r-128)*1.1+128;g=(g-128)*1.1+128;b=(b-128)*1.1+128}
+    else if(s===2){r=l+(r-l)*1.4;g=l+(g-l)*1.4;b=l+(b-l)*1.4;r*=.7;g*=.8;b*=1.0;r=(r-128)*1.2+128;g=(g-128)*1.2+128;b=(b-128)*1.2+128}
+    else if(s===3){const tr=.393*r+.769*g+.189*b,tg=.349*r+.686*g+.168*b,tb=.272*r+.534*g+.131*b;r=r*.4+tr*.6;g=g*.4+tg*.6;b=b*.4+tb*.6;r=(r-128)*1.05+128;g=(g-128)*1.05+128;b=(b-128)*1.05+128}
+    else{r=g=b=(l-128)*1.35+128}
+    a[i]=r;a[i+1]=g;a[i+2]=b}
+  x.putImageData(d,ox,oy);
+}
+
+/* SVG scenes for the sample comics */
+const SC={
+ dog1:{alt:'Detective dog sniffing around',bg:['#FDCB6E','#FF8A65'],ground:'#8D5A3B',burst:0,ch:[['🐶',.4,.56,.5],['🔍',.74,.7,.2],['🐾',.14,.9,.08],['🐾',.26,.84,.08]]},
+ dog2:{alt:'Detective dog leaping',bg:['#6C5CE7','#FD79A8'],ground:'#2d2250',burst:1,ch:[['🐶',.4,.54,.5],['🦝',.82,.62,.28],['🍪',.7,.3,.12]]},
+ dog3:{alt:'Dog celebrates with a trophy',bg:['#00CEC9','#A29BFE'],ground:'#1c6e6a',burst:1,ch:[['🐶',.36,.58,.5],['🏆',.76,.52,.26],['🎉',.2,.2,.15],['🦴',.74,.86,.11]]},
+ cy1:{alt:'A glowing stylus in a neon city',bg:['#0F101A','#6C5CE7'],ground:'#101024',burst:0,ch:[['🏙️',.5,.28,.34],['🖊️',.5,.66,.34],['✨',.24,.5,.13],['✨',.78,.46,.11]]},
+ cy2:{alt:'Hero draws a shield',bg:['#0F101A','#00CEC9'],ground:'#06302f',burst:1,ch:[['🧑‍🎤',.38,.56,.46],['🛡️',.75,.5,.28],['⚡',.2,.22,.15]]},
+ cy3:{alt:'Hero over the bright city',bg:['#6C5CE7','#FD79A8'],ground:'#211a4a',burst:0,ch:[['🌆',.68,.3,.3],['🦸',.38,.6,.46],['✨',.2,.24,.12]]},
+ dr1:{alt:'Sketchbook with a water drop',bg:['#FFF3D6','#FDCB6E'],ground:'#c8a45a',burst:0,ch:[['📖',.5,.64,.4],['💧',.5,.24,.16],['✏️',.22,.82,.12]]},
+ dr2:{alt:'Paper dragon wakes up',bg:['#2ECC71','#0b3d2c'],ground:'#06251a',burst:1,ch:[['🐉',.5,.54,.56],['🔥',.2,.24,.15],['✨',.82,.26,.12]]},
+ dr3:{alt:'Friends fly on the dragon',bg:['#74B9FF','#A29BFE'],ground:'#5a4fb8',burst:0,ch:[['☁️',.76,.22,.16],['☁️',.2,.3,.12],['🐉',.38,.55,.44],['🧒',.72,.72,.24]]},
+ mo1:{alt:'A little house under the moon',bg:['#2d1b69','#6C5CE7'],ground:'#1a0f40',burst:0,ch:[['🌙',.75,.22,.22],['🏠',.4,.58,.42],['✨',.2,.3,.12]]},
+ mo2:{alt:'Baker rabbit with cupcakes',bg:['#FDCB6E','#FD79A8'],ground:'#b8527a',burst:1,ch:[['🐰',.32,.58,.44],['🧁',.7,.6,.32],['⭐',.5,.2,.12]]},
+ mo3:{alt:'Moon bakery is open',bg:['#A29BFE','#74B9FF'],ground:'#5a62b8',burst:0,ch:[['🌙',.3,.28,.2],['🧁',.5,.62,.38],['🐰',.78,.66,.24],['✨',.8,.24,.12]]},
+ rb1:{alt:'Robot with a backwards arm',bg:['#74B9FF','#00CEC9'],ground:'#1c6e6a',burst:0,ch:[['🤖',.4,.58,.46],['🔧',.76,.72,.2],['⚙️',.2,.25,.12]]},
+ rb2:{alt:'Snack rocket launch',bg:['#6C5CE7','#00CEC9'],ground:'#241b66',burst:1,ch:[['🤖',.32,.58,.4],['🚀',.74,.4,.3],['🍪',.5,.22,.12]]},
+ rb3:{alt:'Two robot friends',bg:['#FDCB6E','#74B9FF'],ground:'#2b7bb8',burst:0,ch:[['🤖',.3,.6,.38],['🦾',.7,.6,.34],['💛',.5,.22,.14]]},
+ cr1:{alt:'Batter at the crease',bg:['#74B9FF','#2ECC71'],ground:'#1e8449',burst:0,ch:[['🏏',.4,.6,.4],['🧢',.72,.5,.2],['☁️',.2,.2,.13]]},
+ cr2:{alt:'A big hit',bg:['#FDCB6E','#FF5722'],ground:'#7a3414',burst:1,ch:[['🏏',.38,.58,.44],['⚾',.78,.26,.16],['💥',.62,.4,.2]]},
+ cr3:{alt:'Team lifts the trophy',bg:['#FFE29A','#FD79A8'],ground:'#b8527a',burst:1,ch:[['🏆',.5,.5,.42],['🎉',.2,.24,.15],['🎉',.82,.28,.15]]}
 };
-build(1);
+let gid=0;
+function scene(key){
+  const s=SC[key],id='g'+(++gid);
+  let b=`<svg class="scene" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${s.alt}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.bg[0]}"/><stop offset="1" stop-color="${s.bg[1]}"/></linearGradient><pattern id="${id}h" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="2" fill="#000" opacity=".14"/></pattern></defs><rect width="400" height="400" fill="url(#${id})"/>`;
+  if(s.burst)for(let i=0;i<20;i++){const a=i/20*6.2832,c=(i+.5)/20*6.2832;b+=`<polygon points="200,220 ${200+Math.cos(a)*440},${220+Math.sin(a)*440} ${200+Math.cos(c)*440},${220+Math.sin(c)*440}" fill="#fff" opacity=".17"/>`}
+  b+=`<rect width="400" height="400" fill="url(#${id}h)"/><path d="M0 335 Q100 305 200 330 T400 318 V400 H0Z" fill="${s.ground}"/>`;
+  s.ch.forEach(([e,x,y,z])=>{const X=x*400,Y=y*400,Z=z*400;b+=`<ellipse cx="${X}" cy="${Y+Z*.48}" rx="${Z*.42}" ry="${Z*.08}" fill="#000" opacity=".25"/><text x="${X}" y="${Y}" font-size="${Z}" text-anchor="middle" dominant-baseline="central">${e}</text>`});
+  return b+'</svg>';
+}
+function sceneImage(key){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(scene(key).replace('<svg ','<svg width="600" height="600" '))})}
+
+/* ===== data ===== */
+const COMICS=[
+ {id:'doggo',title:'Doggo Detective: Notebook Case',author:'Saimon Samiu',genre:'Comedy & Mystery',g:'Mystery',cover:'dog1',c:'var(--orange)',rot:-1.4,rating:4.9,count:84,views:1240,likes:210,
+  syn:'Drawn right in a student\'s notebook! Buster the hand-sketched hound solves the mystery of the missing golden bone.',
+  panels:[{sc:'dog1',st:1,b:[['thought','Aha! Footprints leading behind the school desk…',.5,.15]],f:[['SNIFF!','#FF5722',.25,.7]]},
+          {sc:'dog2',st:2,b:[['shout','Stop right there, treat thief!',.5,.2]],f:[['POW!!','#FDCB6E',.74,.6]]},
+          {sc:'dog3',st:3,b:[['speech','Another notebook mystery closed by Buster!',.5,.22]],f:[['WAG WAG!','#00CEC9',.3,.78]]}]},
+ {id:'cyber',title:'Cyber Blade: Neon Sector 7',author:'Nabil Comics',genre:'Cyberpunk Action',g:'Sci-Fi',cover:'assets/banner.jpg',c:'var(--cyan)',rot:1,rating:4.8,count:152,views:3890,likes:540,
+  syn:'In the skyline of Cyber City, a rebel street artist finds a stylus that can turn anything she sketches into electric reality.',
+  panels:[{sc:'cy1',st:2,b:[['thought','A stylus? It\'s buzzing in my hand…',.5,.14]],f:[['ZAP!','#FDCB6E',.74,.8]]},
+          {sc:'cy2',st:2,b:[['shout','Draw me a shield!',.5,.16]],f:[['WHOOSH!','#00CEC9',.3,.8]]},
+          {sc:'cy3',st:1,b:[['speech','Sector 7 just got a lot brighter.',.5,.2]],f:[['SHINE!','#FD79A8',.72,.82]]}]},
+ {id:'dragon',title:'The Paper Dragon Chronicles',author:'Lina Art',genre:'Fantasy & Adventure',g:'Fantasy',cover:'dr2',c:'var(--pink)',rot:-.7,rating:4.7,count:63,views:920,likes:175,
+  syn:'A fantasy beast sealed in an artist\'s sketchbook wakes up when a drop of water touches the paper.',
+  panels:[{sc:'dr1',st:3,b:[['thought','Did the sketchbook just… move?',.5,.14]],f:[['DRIP!','#00CEC9',.74,.82]]},
+          {sc:'dr2',st:1,b:[['shout','ROOOAR!',.5,.15]],f:[['WHOOM!','#FF5722',.26,.82]]},
+          {sc:'dr3',st:1,b:[['speech','Come on, little dragon, let\'s fly!',.5,.2]],f:[['WHEEE!','#FDCB6E',.7,.5]]}]},
+ {id:'moon',title:'Moon Bakery',author:'Maya Studio',genre:'Cozy Fantasy',g:'Cozy',cover:'mo2',c:'var(--yellow)',rot:.8,rating:4.9,count:97,views:2100,likes:388,
+  syn:'Every night at midnight, a sleepy rabbit baker opens a little shop on the moon. Tonight, someone orders one hundred cupcakes.',
+  panels:[{sc:'mo1',st:1,b:[['thought','Who orders cupcakes at midnight?',.5,.14]],f:[['DING!','#FDCB6E',.74,.82]]},
+          {sc:'mo2',st:1,b:[['shout','Sprinkles ready for launch!',.5,.16]],f:[['WHIRR!','#FD79A8',.28,.82]]},
+          {sc:'mo3',st:0,b:[['speech','Fresh from the moon oven!',.5,.2]],f:[['YUM!','#00CEC9',.72,.8]]}]},
+ {id:'robo',title:'Robo Pals',author:'Tariq K.',genre:'Sci-Fi Comedy',g:'Comedy',cover:'rb2',c:'var(--cyan)',rot:-.9,rating:4.6,count:71,views:1500,likes:240,
+  syn:'Bolt is a very clumsy robot with a very big heart. Together with his best friend, he builds a rocket powered by snacks.',
+  panels:[{sc:'rb1',st:1,b:[['speech','Beep! My left arm is on backwards.',.5,.14]],f:[['CLANK!','#FDCB6E',.74,.82]]},
+          {sc:'rb2',st:2,b:[['shout','Launch the snack rocket!',.5,.16]],f:[['ZOOM!','#00CEC9',.28,.82]]},
+          {sc:'rb3',st:1,b:[['whisper','Best. Friends. Ever.',.5,.2]],f:[['BEEP!','#FD79A8',.72,.8]]}]},
+ {id:'over',title:'The Last Over',author:'Rafi Sketches',genre:'Sports Drama',g:'Sports',cover:'cr2',c:'var(--orange)',rot:.6,rating:4.7,count:58,views:1130,likes:196,
+  syn:'Six runs to win, one ball left. A street cricket final that the whole neighborhood will never forget.',
+  panels:[{sc:'cr1',st:1,b:[['thought','Six runs to win. Breathe…',.5,.14]],f:[['WHOOSH!','#00CEC9',.74,.82]]},
+          {sc:'cr2',st:1,b:[['shout','Here it comes!',.5,.16]],f:[['THWACK!','#FDCB6E',.28,.82]]},
+          {sc:'cr3',st:3,b:[['speech','We did it, team!',.5,.2]],f:[['YEAH!','#FD79A8',.72,.82]]}]}
+];
+const GENRES=['All',...new Set(COMICS.map(c=>c.g))];
+const cover=c=>c.cover.endsWith('.jpg')?`<img src="${c.cover}" alt="">`:scene(c.cover);
+
+const SEED_POSTS=[
+ {id:'seed1',authorName:'Saimon (Creator)',title:'Notebook Doggo Sketch → Manga Hero!',description:'Drew this pencil puppy on my class notebook, then inked the lines, added cel shading and a speech bubble.',scene:'dog1',characterDesign:'Beagle Detective · Trenchcoat · Golden amber aura',likesCount:42,remixCount:12},
+ {id:'seed2',authorName:'Tariq K.',title:'Mecha Cyber Guardian',description:'Sketched with a 2B pencil and a blue pen. Boosted the line thickness and added neon highlights!',img:'assets/banner.jpg',characterDesign:'Neon blue titanium armor · Energy halberd',likesCount:88,remixCount:29},
+ {id:'seed3',authorName:'Maya Studio',title:'Mystic Forest Spirit',description:'A friendly dragon from my sketchbook. I added a fire sticker and a shout bubble.',scene:'dr2',characterDesign:'Emerald dragon · Ember wings',likesCount:63,remixCount:17},
+ {id:'seed4',authorName:'Lina Art',title:'Midnight Cupcake Rabbit',description:'The baker from Moon Bakery! Drawn in 10 minutes, then colored with Vibrant style.',scene:'mo2',characterDesign:'Rabbit baker · Pink apron',likesCount:51,remixCount:9}
+];
+
+const PAL=['#16172A','#FF5722','#6C5CE7','#00CEC9','#FDCB6E','#FD79A8','#2ECC71','#8D5A3B','#FFFFFF'];
+const STK={c_pow:['⭐','⚡','🔥','💥','✨','🌪️','💫','☄️'],c_ani:['🐱','🐶','🐰','🦊','🐼','🦄','🦁','🐸'],c_gear:['👑','🕶️','🛡️','⚔️','🚀','🏆','🎩','🥊'],c_fun:['😎','🤩','😜','🦸','❤️','🎨','🍕','🎉']};
+const SFX=['POW!','BAM!','WOW!','ZAP!','WHOOSH!','BOOM!'],SFXC=['#FF5722','#FDCB6E','#00CEC9','#FD79A8'];
+const LAYOUTS=[
+ {id:'single',n:1,cols:1,h:[600],mw:580,c:'var(--orange)',key:'single',labels:['Main Scene']},
+ {id:'strip3',n:3,cols:1,h:[430,430,430],mw:520,c:'var(--cyan)',key:'strip',labels:['Panel 1: Setup','Panel 2: Conflict','Panel 3: Punchline']},
+ {id:'grid4',n:4,cols:2,h:[600,600,600,600],mw:720,c:'var(--pink)',key:'grid',labels:['Scene 1','Scene 2','Scene 3','Scene 4']},
+ {id:'split2',n:2,cols:1,h:[400,320],mw:580,c:'var(--yellow)',key:'split',labels:['Top: Action','Bottom: Reaction']},
+ {id:'wide',n:1,cols:1,h:[338],mw:780,c:'var(--indigo)',key:'wide',labels:['Cinematic Shot']}
+];
+
+/* ===== studio ===== */
+const st={lay:null,panels:[],act:0,tool:'pen',color:PAL[0],size:8,style:0,motion:0,sel:null,cur:null};
+const P=()=>st.panels[st.act];
+const ser=items=>JSON.stringify(items,(k,v)=>k==='bb'||k==='pop'?undefined:v);
+const dirty=()=>st.panels.some(p=>p.hist.length||p.items.length);
+
+/* layout picker */
+function renderPicker(){
+  $('#lcards').innerHTML=LAYOUTS.map(l=>`<button class="lc" data-id="${l.id}" style="--c:${l.c}"><div class="mini" style="grid-template-columns:repeat(${l.cols},1fr)">${l.h.map(h=>`<b style="aspect-ratio:600/${h}"></b>`).join('')}</div><span class="pill">${t('lay_'+l.key+'_g')}</span><h3>${t('lay_'+l.key+'_t')}</h3><p class="sub">${t('lay_'+l.key+'_s')}</p><p class="d">${t('lay_'+l.key+'_d')}</p></button>`).join('');
+  $$('#lcards .lc').forEach(b=>b.onclick=()=>openLayout(b.dataset.id));
+  const list=LS.get('cc_projects',[]);$('#projWrap').hidden=!list.length;
+  $('#projList').innerHTML=list.map((r,i)=>`<div class="cc" style="--c:${['var(--orange)','var(--cyan)','var(--pink)'][i%3]};cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${r.thumb}"></div><div class="in"><h3>${esc(r.title)}</h3><div class="sh-act"><button class="btn sm cy" data-o="${r.id}">${t('open')}</button><button class="btn sm ghost" data-d="${r.id}">🗑️ ${t('del')}</button></div></div></div>`).join('');
+  $$('[data-o]',$('#projList')).forEach(b=>b.onclick=()=>openProject(b.dataset.o));
+  $$('[data-d]',$('#projList')).forEach(b=>b.onclick=()=>deleteProject(b.dataset.d,renderPicker));
+}
+function studioPane(){const ed=!!st.lay;$('#picker').hidden=ed;$('#editor').hidden=!ed;if(ed)redrawAll();else renderPicker()}
+function openLayout(id){
+  st.lay=LAYOUTS.find(l=>l.id===id);st.cur=null;st.style=0;st.motion=0;$('#title').value='';
+  buildBoard();setStyle(0);setMotion(0);studioPane();window.scrollTo(0,0);
+  if(location.hash!=='#studio')location.hash='#studio';
+}
+$('#toLayouts').onclick=async()=>{if(dirty()&&!(await ask({title:t('q_page'),confirm:true})))return;st.lay=null;studioPane()};
+
+/* panels */
+function mkPanel(i,h){
+  const el=document.createElement('div');el.className='sp';el.style.aspectRatio=`${S}/${h}`;
+  const dr=document.createElement('canvas'),fx=document.createElement('canvas');
+  dr.width=fx.width=S;dr.height=fx.height=h;dr.className='dr';fx.className='fx';
+  const lab=document.createElement('span');lab.className='plabel';lab.textContent=st.lay.labels[i];
+  el.append(dr,fx,lab);
+  const dctx=dr.getContext('2d',{willReadFrequently:true});dctx.fillStyle='#fff';dctx.fillRect(0,0,S,h);
+  const p={i,W:S,H:h,el,dr,dctx,fx,fctx:fx.getContext('2d'),hist:[],redo:[],items:[]};wire(p);return p;
+}
+function buildBoard(){
+  const L=st.lay,b=$('#board');b.innerHTML='';st.panels=[];st.sel=null;st.act=0;
+  b.style.gridTemplateColumns=`repeat(${L.cols},1fr)`;b.style.maxWidth=L.mw+'px';
+  L.h.forEach((h,i)=>{const p=mkPanel(i,h);b.append(p.el);st.panels.push(p)});
+  refresh();
+}
+function renderFx(p){p.fctx.clearRect(0,0,p.W,p.H);p.items.forEach(it=>drawItem(p.fctx,it,p.W,p.H,st.sel&&st.sel.it===it))}
+function redrawAll(){st.panels.forEach(renderFx);if(typeof paintReader==='function')paintReader()}
+function refresh(){
+  st.panels.forEach((p,i)=>{p.el.classList.toggle('act',i===st.act&&st.panels.length>1);renderFx(p)});
+  const p=P();$('#undo').disabled=!p||!p.hist.length;$('#redo').disabled=!p||!p.redo.length;
+  const s=st.sel;$('#selbar').hidden=!s;if(s)$('#sEdit').hidden=s.it.t==='sticker';
+}
+function setSel(p,it){const old=st.sel;st.sel=it?{p,it}:null;if(old&&old.p!==p)renderFx(old.p);if(p)renderFx(p);refresh()}
+const cur=p=>({img:p.dctx.getImageData(0,0,p.W,p.H),items:ser(p.items)});
+function snap(p){p.hist.push(cur(p));if(p.hist.length>12)p.hist.shift();p.redo=[]}
+function apply(p,s){p.dctx.putImageData(s.img,0,0);p.items=JSON.parse(s.items);if(st.sel&&st.sel.p===p)st.sel=null;refresh()}
+function undo(){const p=P(),s=p&&p.hist.pop();if(!s)return;p.redo.push(cur(p));apply(p,s)}
+function redo(){const p=P(),s=p&&p.redo.pop();if(!s)return;p.hist.push(cur(p));apply(p,s)}
+
+function wire(p){
+  const fx=p.fx;let mode=null,last,off,snapped=false;
+  const pos=e=>{const r=fx.getBoundingClientRect();return{x:(e.clientX-r.left)*p.W/r.width,y:(e.clientY-r.top)*p.H/r.height}};
+  fx.addEventListener('pointerdown',e=>{
+    e.preventDefault();fx.setPointerCapture(e.pointerId);st.act=p.i;const q=pos(e);
+    const hit=[...p.items].reverse().find(it=>it.bb&&Math.abs(q.x-it.bb.x)<=it.bb.w/2+12&&Math.abs(q.y-it.bb.y)<=it.bb.h/2+12);
+    if(hit){setSel(p,hit);mode='move';snapped=false;off={x:hit.x*p.W-q.x,y:hit.y*p.H-q.y}}
+    else{if(st.sel)setSel(st.sel.p,null);snap(p);mode='draw';last=q;stroke(p,q,q)}
+    refresh();
+  });
+  fx.addEventListener('pointermove',e=>{
+    if(!mode)return;const q=pos(e);
+    if(mode==='draw'){stroke(p,last,q);last=q}
+    else{const it=st.sel.it;if(!snapped){snap(p);snapped=true}it.x=Math.min(.97,Math.max(.03,(q.x+off.x)/p.W));it.y=Math.min(.97,Math.max(.03,(q.y+off.y)/p.H));renderFx(p)}
+  });
+  const end=()=>{if(mode)refresh();mode=null};
+  fx.addEventListener('pointerup',end);fx.addEventListener('pointercancel',end);
+}
+function stroke(p,a,b){
+  const x=p.dctx;x.lineCap=x.lineJoin='round';x.lineWidth=st.size*S/400;x.strokeStyle=st.tool==='eraser'?'#fff':st.color;
+  x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x+.01,b.y);x.stroke();
+}
+function addItem(o){
+  const p=P();snap(p);const n=p.items.length;
+  const it={id:newId('i'),x:.5,y:Math.min(.8,.28+(n%4)*.15),s:1,r:0,pop:reduce?1:.2,...o};
+  p.items.push(it);setSel(p,it);
+  if(!reduce){const t0=performance.now();(function f(now){const k=Math.min(1,(now-t0)/400),c1=1.70158,c3=c1+1;it.pop=k>=1?1:1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2);renderFx(p);if(k<1)requestAnimationFrame(f)})(t0)}
+}
+function selDo(fn){const s=st.sel;if(!s)return;snap(s.p);fn(s.it,s.p);renderFx(s.p);refresh()}
+$('#sMinus').onclick=()=>selDo(it=>it.s=Math.max(.5,it.s*.85));
+$('#sPlus').onclick=()=>selDo(it=>it.s=Math.min(3,it.s*1.18));
+$('#sRot').onclick=()=>selDo(it=>it.r=(it.r+15)%360);
+$('#sDel').onclick=()=>{const s=st.sel;if(!s)return;snap(s.p);s.p.items=s.p.items.filter(i=>i!==s.it);setSel(s.p,null)};
+$('#sEdit').onclick=async()=>{const s=st.sel;if(!s)return;const v=await ask1(t('p_edit'),s.it.text);if(v){snap(s.p);s.it.text=v;renderFx(s.p)}};
+$('#undo').onclick=undo;$('#redo').onclick=redo;
+addEventListener('keydown',e=>{if($('#editor').hidden||$('#v-studio').hidden||dlg.open||/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}if(e.key==='Delete')$('#sDel').click()});
+
+/* tool dock */
+$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)});
+function setTool(m){st.tool=m;$('#pen').classList.toggle('on',m==='pen');$('#eraser').classList.toggle('on',m==='eraser')}
+$('#pen').onclick=()=>setTool('pen');$('#eraser').onclick=()=>setTool('eraser');
+$('#pal').innerHTML=PAL.map((c,i)=>`<button class="sw${i?'':' on'}" style="background:${c}" data-c="${c}" aria-label="Color ${i+1}"></button>`).join('')+`<label class="cust" title="Custom color">🌈<input type="color" id="custom" value="#ff5722" aria-label="Custom color"></label>`;
+function pickColor(c,btn){st.color=c;setTool('pen');$$('.sw').forEach(s=>s.classList.toggle('on',s===btn));$('#dot').style.background=c}
+$$('.sw').forEach(b=>b.onclick=()=>pickColor(b.dataset.c,b));
+$('#custom').oninput=e=>pickColor(e.target.value,null);
+const dot=()=>{const d=Math.max(4,st.size);$('#dot').style.width=$('#dot').style.height=d+'px'};
+$('#size').oninput=e=>{st.size=+e.target.value;dot()};dot();$('#dot').style.background=st.color;
+$('#clr').onclick=async()=>{if(!(await ask({title:t('q_clear'),confirm:true})))return;const p=P();snap(p);p.dctx.fillStyle='#fff';p.dctx.fillRect(0,0,p.W,p.H);p.items=[];setSel(p,null)};
+
+/* photo / camera -> comic ink */
+function loadPhoto(f){
+  if(!f)return;const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{const p=P();snap(p);coverDraw(p,im);URL.revokeObjectURL(u);refresh();toast(t('toast_photo'))};im.src=u;
+}
+function coverDraw(p,im){const k=Math.max(p.W/im.width,p.H/im.height),w=im.width*k,h=im.height*k;p.dctx.fillStyle='#fff';p.dctx.fillRect(0,0,p.W,p.H);p.dctx.drawImage(im,(p.W-w)/2,(p.H-h)/2,w,h)}
+$('#photo').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value=''};
+$('#snap').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value=''};
+$('#ink').onclick=()=>{const p=P();snap(p);const d=p.dctx.getImageData(0,0,p.W,p.H),a=d.data;
+  for(let i=0;i<a.length;i+=4){const g=.3*a[i]+.59*a[i+1]+.11*a[i+2];let v=(g-118)*2.5+118;v=v>168?255:Math.max(0,v);a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
+  p.dctx.putImageData(d,0,0);refresh()};
+$('#bgs').innerHTML=BGS.map((k,i)=>`<button class="chip" data-i="${i}" data-i18n="${k}"></button>`).join('');
+$$('#bgs .chip').forEach(b=>b.onclick=()=>{const p=P();snap(p);drawBG(p.dctx,p.W,p.H,+b.dataset.i);refresh()});
+
+/* words, sounds, stickers */
+$$('[data-bub]').forEach(b=>b.onclick=async()=>{const k=b.dataset.bub,v=await ask1(t('p_'+k),t('d_'+k));if(v)addItem({t:k,text:v})});
+$('#sfx').innerHTML=SFX.map(s=>`<button class="chip">${s}</button>`).join('')+`<button class="chip" id="sfxOwn" data-i18n="sfx_own"></button>`;
+let sfxN=0;
+$$('#sfx .chip').forEach(b=>b.onclick=async()=>{let v=b.textContent;if(b.id==='sfxOwn'){v=await ask1(t('p_sfx'),'');if(!v)return}addItem({t:'sfx',text:v,c:SFXC[sfxN++%4],r:Math.round(Math.random()*16-8)})});
+$('#stkCats').innerHTML=Object.keys(STK).map((k,i)=>`<button class="chip${i?'':' on'}" data-k="${k}" data-i18n="${k}"></button>`).join('');
+function showStk(k){$('#stk').innerHTML=STK[k].map(e=>`<button aria-label="${e}">${e}</button>`).join('');$$('#stk button').forEach(b=>b.onclick=()=>addItem({t:'sticker',text:b.textContent}));$$('#stkCats .chip').forEach(c=>c.classList.toggle('on',c.dataset.k===k))}
+$$('#stkCats .chip').forEach(c=>c.onclick=()=>showStk(c.dataset.k));showStk('c_pow');
+
+/* color style + camera motion */
+$('#styles').innerHTML=STYLES.map((k,i)=>`<button class="chip${i?'':' on'}" data-i="${i}" data-i18n="${k}"></button>`).join('');
+function setStyle(i){st.style=i;$('#board').dataset.style=i;$$('#styles .chip').forEach(c=>c.classList.toggle('on',+c.dataset.i===i))}
+$$('#styles .chip').forEach(c=>c.onclick=()=>setStyle(+c.dataset.i));
+const MOTIONS=['mo_none','mo_pan','mo_shake','mo_breath'];
+$('#motions').innerHTML=MOTIONS.map((k,i)=>`<button class="chip${i?'':' on'}" data-i="${i}" data-i18n="${k}"></button>`).join('');
+function setMotion(i){st.motion=i;$('#board').dataset.motion=i;$$('#motions .chip').forEach(c=>c.classList.toggle('on',+c.dataset.i===i))}
+$$('#motions .chip').forEach(c=>c.onclick=()=>setMotion(+c.dataset.i));
+
+/* compose the whole page into one picture */
+function compose(){
+  const L=st.lay,c=L.cols,G=20,FH=76,rows=[];
+  for(let i=0;i<st.panels.length;i+=c)rows.push(st.panels.slice(i,i+c));
+  const rh=rows.map(r=>Math.max(...r.map(p=>p.H))),W=c*S+(c+1)*G,H=rh.reduce((a,b)=>a+b,0)+(rows.length+1)*G+FH;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const x=cv.getContext('2d',{willReadFrequently:true});x.fillStyle='#0F101A';x.fillRect(0,0,W,H);
+  let y=G;
+  rows.forEach((r,ri)=>{r.forEach((p,ci)=>{const ox=G+ci*(S+G);
+    x.drawImage(p.dr,ox,y);stylize(x,ox,y,p.W,p.H,st.style);
+    x.save();x.translate(ox,y);x.beginPath();x.rect(0,0,p.W,p.H);x.clip();p.items.forEach(it=>drawItem(x,it,p.W,p.H,false,true));x.restore()});y+=rh[ri]+G});
+  x.textBaseline='middle';x.textAlign='left';x.fillStyle='#F4F5FB';x.font=`800 30px ${FF}`;x.fillText(($('#title').value.trim()||t('untitled')).slice(0,40),G,H-FH/2+2);
+  x.textAlign='right';x.fillStyle='#FDCB6E';x.font='40px Bangers,Impact,sans-serif';x.fillText('ComicCraft',W-G,H-FH/2+2);
+  return cv;
+}
+function thumb(w){const cv=compose(),tc=document.createElement('canvas');w=Math.min(w,cv.width);tc.width=w;tc.height=Math.round(cv.height*w/cv.width);tc.getContext('2d').drawImage(cv,0,0,tc.width,tc.height);return tc.toDataURL('image/jpeg',.72)}
+const slug=s=>(s||'my-comic').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'my-comic';
+$('#download').onclick=()=>{compose().toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=slug($('#title').value)+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast(t('toast_dl'))},'image/png')};
+try{if(navigator.canShare&&navigator.canShare({files:[new File([''],'a.png',{type:'image/png'})]}))$('#share').hidden=false}catch(e){}
+$('#share').onclick=()=>compose().toBlob(async b=>{try{await navigator.share({files:[new File([b],slug($('#title').value)+'.png',{type:'image/png'})],title:$('#title').value||'ComicCraft'})}catch(e){}});
+
+/* motion comic video (WebM) */
+$('#motionExp').onclick=()=>{
+  if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast(t('toast_nomotion'));return}
+  const base=compose(),w=Math.min(base.width,900)&~1,h=Math.round(base.height*w/base.width)&~1,cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const x=cv.getContext('2d'),mt=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m));
+  let rec;try{rec=new MediaRecorder(cv.captureStream(30),mt?{mimeType:mt}:{})}catch(e){toast(t('toast_nomotion'));return}
+  const chunks=[],mode=st.motion||1;rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{const b=new Blob(chunks,{type:rec.mimeType||'video/webm'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=slug($('#title').value)+(b.type.includes('mp4')?'.mp4':'.webm');a.click();setTimeout(()=>URL.revokeObjectURL(a.href),6000);toast(t('toast_dl'))};
+  toast(t('toast_rec'));rec.start();const t0=performance.now(),D=4500;
+  (function f(now){const k=Math.min(1,(now-t0)/D);
+    let z=1,dx=0,dy=0;if(mode===1){z=1+.14*k;dx=-.025*w*k;dy=-.02*h*k}else if(mode===2){z=1.03;dx=Math.sin(k*90)*.01*w;dy=Math.cos(k*70)*.01*h}else{z=1+.045*Math.sin(k*Math.PI*2)}
+    x.fillStyle='#0F101A';x.fillRect(0,0,w,h);x.save();x.translate(w/2+dx,h/2+dy);x.scale(z,z);x.drawImage(base,-w/2,-h/2,w,h);x.restore();
+    if(k<1)requestAnimationFrame(f);else rec.stop()})(t0);
+};
+
+/* save to my library, post to community, open, delete */
+$('#saveProj').onclick=()=>{
+  if(!st.lay)return;const list=LS.get('cc_projects',[]);
+  const rec={id:st.cur||newId('c'),title:$('#title').value.trim()||t('untitled'),layout:st.lay.id,style:st.style,motion:st.motion,ts:Date.now(),thumb:thumb(420),
+    panels:st.panels.map(p=>({img:p.dr.toDataURL('image/jpeg',.82),items:JSON.parse(ser(p.items))}))};
+  const i=list.findIndex(r=>r.id===rec.id);if(i>=0)list[i]=rec;else list.unshift(rec);
+  if(LS.set('cc_projects',list)){st.cur=rec.id;toast(t('toast_saved'))}else toast(t('toast_full'));
+};
+function openProject(id){
+  const r=LS.get('cc_projects',[]).find(x=>x.id===id);if(!r)return;
+  openLayout(r.layout);st.cur=r.id;$('#title').value=r.title;setStyle(r.style||0);setMotion(r.motion||0);
+  r.panels.forEach((d,i)=>{const p=st.panels[i];if(!p)return;p.items=d.items;const im=new Image();im.onload=()=>{p.dctx.drawImage(im,0,0,p.W,p.H);renderFx(p)};im.src=d.img;renderFx(p)});
+  refresh();
+}
+async function deleteProject(id,after){if(await ask({title:t('q_del'),confirm:true})){LS.set('cc_projects',LS.get('cc_projects',[]).filter(r=>r.id!==id));if(after)after()}}
+async function postFromStudio(){
+  if(!st.lay||!dirty()){toast(t('toast_draw_first'));location.hash='#studio';return}
+  if(DB.mode==='firebase'&&!DB.user){toast(t('toast_signin'));location.hash='#profile';return}
+  const r=await ask({title:t('post_h'),fields:[{ph:t('post_title'),value:$('#title').value,max:60},{ph:t('post_desc'),area:true,max:240}]});
+  if(!r||!r[0])return;const m=me();
+  const doc={id:newId('p'),authorId:m.id,authorName:m.name,title:r[0],description:r[1]||'',imageUrl:thumb(700),characterDesign:t('lay_'+st.lay.key+'_t')+' · '+t(STYLES[st.style]),likesCount:0,remixCount:0,createdAt:iso(),updatedAt:iso()};
+  const ok=await DB.put('feed',doc);toast(ok?t('toast_posted'):t('toast_post_fail'));if(ok)location.hash='#community';
+}
+$('#postIt').onclick=postFromStudio;$('#postFeed').onclick=postFromStudio;
+
+/* remix: start a new single panel from an existing picture */
+async function remixInto(srcOrScene){
+  openLayout('single');
+  try{const im=srcOrScene.startsWith('scene:')?await sceneImage(srcOrScene.slice(6)):await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=srcOrScene});
+    const p=P();snap(p);coverDraw(p,im);refresh();toast(t('toast_remix'))}catch(e){toast(t('toast_remix_fail'))}
+}
+
+/* tour */
+$('#tour').hidden=!!LS.get('cc_tour',0);$('#tourX').onclick=()=>{LS.set('cc_tour',1);$('#tour').hidden=true};
+
+/* publish as a comic everyone can read (collection "comics"); extra pages are added to your own comic */
+function pageImage(){for(const w of [800,640,480]){const u=thumb(w);if(u.length<=150000)return u}return null}
+async function publishComic(){
+  if(!st.lay||!dirty()){toast(t('toast_draw_first'));return}
+  if(needSignIn()){toast(t('toast_signin'));location.hash='#profile';return}
+  const m=me(),mine=UCOMICS.filter(c=>c.authorId===m.id);
+  const gen=['Fantasy','Mystery','Sci-Fi','Comedy','Cozy','Sports','Adventure','Slice of Life'].map(g=>({v:g,l:g}));
+  const r=await ask({title:t('pub_h'),text:t('pub_note'),fields:[{select:[{v:'',l:t('pub_new')},...mine.map(c=>({v:c.id,l:'+ '+c.title}))],value:''},{ph:t('pub_title'),value:$('#title').value,max:60},{ph:t('pub_syn'),area:true,max:240},{select:gen,value:'Fantasy'}]});
+  if(!r)return;
+  const img=pageImage();if(!img){toast(t('pub_big'));return}
+  const target=r[0]?UCOMICS.find(c=>c.id===r[0]):null,now=iso();
+  if(target){
+    let pages=[];try{pages=JSON.parse(target.pagesJson)}catch(e){}
+    if(pages.length>=6){toast(t('pub_max'));return}
+    pages.push(img);
+    if(await DB.put('comics',{...target,pagesJson:JSON.stringify(pages),chapterCount:pages.length,updatedAt:now})){toast(t('toast_pub_add'));location.hash='#read/'+target.id}else toast(t('toast_post_fail'));
+    return;
+  }
+  if(!r[1]){toast(t('pub_need_title'));return}
+  const doc={id:newId('c'),title:r[1],synopsis:r[2]||'',authorId:m.id,authorName:m.name,genre:r[3],coverUrl:thumb(360),ratingAverage:0,ratingCount:0,viewCount:0,likesCount:0,chapterCount:1,isPublished:true,hidden:false,pagesJson:JSON.stringify([img]),createdAt:now,updatedAt:now};
+  if(await DB.put('comics',doc)){toast(t('toast_pub'));location.hash='#read/'+doc.id}else toast(t('toast_post_fail'));
+}
+$('#publish').onclick=publishComic;
+
+/* AI Comic Magic: needs the Vercel function in /api/ai-ink (hidden when it is not available) */
+const AI_URL=window.COMICCRAFT_AI_URL||'api/ai-ink';let aiStyle='manga';
+$('#aiStyles').innerHTML=['manga','webtoon','neon'].map((k,i)=>`<button class="chip${i?'':' on'}" data-k="${k}" data-i18n="ai_${k}"></button>`).join('');
+$$('#aiStyles .chip').forEach(b=>b.onclick=()=>{aiStyle=b.dataset.k;$$('#aiStyles .chip').forEach(c=>c.classList.toggle('on',c===b))});
+function probeAI(){fetch(AI_URL,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{$('#aiBox').hidden=!(j&&j.ai)}).catch(()=>{})}
+$('#aiGo').onclick=async()=>{
+  const p=P();if(!p)return;
+  if(!LS.get('cc_ai_ok',0)){if(!(await ask({title:t('ai_consent_h'),text:t('ai_consent'),confirm:true})))return;LS.set('cc_ai_ok',1)}
+  const btn=$('#aiGo'),old=btn.innerHTML;btn.disabled=true;btn.textContent='⏳ '+t('ai_busy');
+  try{
+    const sc=Math.min(1,1024/Math.max(p.W,p.H)),c=document.createElement('canvas');c.width=Math.round(p.W*sc);c.height=Math.round(p.H*sc);c.getContext('2d').drawImage(p.dr,0,0,c.width,c.height);
+    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),70000);
+    const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:c.toDataURL('image/jpeg',.85),style:aiStyle}),signal:ctl.signal});clearTimeout(to);
+    const j=await res.json();if(!res.ok||!j.image)throw new Error(j.error||'fail');
+    const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=j.image});
+    snap(p);coverDraw(p,im);refresh();toast(t('ai_done'));
+  }catch(e){toast(e&&e.message==='rate'?t('ai_rate'):t('ai_fail'))}
+  finally{btn.disabled=false;btn.innerHTML=old}
+};
+
+/* ===== pages ===== */
+const needSignIn=()=>DB.mode==='firebase'&&!DB.user;
+const bmAll=()=>LS.get('cc_bm',{});
+const COLS=['var(--orange)','var(--cyan)','var(--pink)','var(--yellow)'];
+const visible=l=>l.filter(x=>!x.hidden&&x.isPublished!==false);
+
+/* ---- comics published by everyone (collection "comics") ---- */
+let UCOMICS=[],uLoaded=false,readerSeen=null,curComic=null;
+function normUser(d,full){
+  let pages=[];if(full){try{pages=JSON.parse(d.pagesJson)}catch(e){}}
+  return{id:d.id,title:d.title,author:d.authorName,authorId:d.authorId,genre:d.genre||'Comic',g:d.genre||'Comic',coverUrl:d.coverUrl,c:COLS[hue(d.id)%4],rot:((hue(d.id)%5)-2)*.5,likes:d.likesCount||0,views:d.viewCount||0,syn:d.synopsis||'',pageCount:d.chapterCount||0,pages,user:true};
+}
+const findComic=(id,full)=>COMICS.find(c=>c.id===id)||(UCOMICS.find(c=>c.id===id)?normUser(UCOMICS.find(c=>c.id===id),full):null);
+function startShared(){
+  subscribe('ucomics',DB,'comics',list=>{
+    UCOMICS=visible(list).filter(x=>x.pagesJson);uLoaded=true;
+    if(route==='home')renderHome();
+    else if(route==='read'&&curComic&&!COMICS.find(c=>c.id===curComic)){
+      const u=UCOMICS.find(c=>c.id===curComic);
+      if(!u||readerSeen!==u.id+':'+(u.likesCount||0)+':'+(u.chapterCount||0))renderReader(curComic,true);
+    }else if(route==='profile')paintProfile();
+  });
+}
+
+/* ---- report ---- */
+async function report(kind,targetId){
+  const r=await ask({title:t('rep_h'),fields:[{select:[1,2,3,4].map(n=>({v:'r'+n,l:t('rep_'+n)}))}]});
+  if(!r)return;
+  if(needSignIn()){toast(t('toast_signin'));return}
+  const m=me(),doc={id:newId('r'),kind,targetId,reason:r[0],reporterId:m.id,createdAt:iso(),updatedAt:iso()};
+  await (DB.mode==='firebase'?DB:LOCAL).put('reports',doc);toast(t('toast_reported'));
+}
+
+/* ---- home / explore ---- */
+let hq='',hg='All';
+function card(c,prog){
+  const lk=liked('c:'+c.id),likes=c.user?c.likes:c.likes+(lk?1:0);
+  return `<button class="cc" data-id="${esc(c.id)}" style="--c:${c.c};--rot:${c.rot}deg"><div class="cv">${c.user?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}<span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${t('by')} ${esc(c.author)}</span><span>${c.user?'🆕':'⭐ '+c.rating}</span></div><div class="meta"><span>${c.user?(c.pageCount||1)+' '+t('pages'):c.panels.length+' '+t('chap')}</span><span>❤ ${likes}</span></div>${prog!=null?`<div class="bar"><i style="width:${Math.round(prog*100)}%"></i></div>`:''}</div></button>`;
+}
+function bindCards(root){$$('.cc[data-id]',root).forEach(b=>b.onclick=()=>location.hash='#read/'+b.dataset.id)}
+const matches=c=>{const q=hq.toLowerCase();return(hg==='All'||c.g===hg)&&(!q||(c.title+' '+c.author+' '+c.genre).toLowerCase().includes(q))};
+function renderHomeList(){
+  const list=COMICS.filter(matches);
+  $('#library').innerHTML=list.length?list.map(c=>card(c)).join(''):`<div class="empty"><div class="big">🔍</div><p>${t('no_match')}</p></div>`;
+  const ul=UCOMICS.map(d=>normUser(d)).filter(matches);
+  $('#ucSec').hidden=!UCOMICS.length;
+  $('#ucList').innerHTML=ul.length?ul.map(c=>card(c)).join(''):`<div class="empty"><div class="big">🔍</div><p>${t('no_match')}</p></div>`;
+  bindCards($('#library'));bindCards($('#ucList'));
+}
+function renderHome(){
+  const gs=['All',...new Set([...COMICS.map(c=>c.g),...UCOMICS.map(c=>c.genre||'Comic')])];
+  $('#genres').innerHTML=gs.map(g=>`<button class="chip${g===hg?' on':''}" data-g="${esc(g)}">${g==='All'?t('all'):esc(g)}</button>`).join('');
+  $$('#genres .chip').forEach(b=>b.onclick=()=>{hg=b.dataset.g;renderHome()});
+  renderHomeList();
+  const items=Object.entries(bmAll()).filter(([id,v])=>v.p>.02&&v.p<.98&&findComic(id));
+  $('#cont').hidden=!items.length;
+  $('#contList').innerHTML=items.map(([id,v])=>card(findComic(id),v.p)).join('');bindCards($('#contList'));
+}
+$('#q').oninput=e=>{hq=e.target.value;renderHomeList()};
+$('#ctaRead').onclick=e=>{e.preventDefault();if(location.hash!=='#home'&&location.hash!=='')location.hash='#home';setTimeout(()=>$('#comics').scrollIntoView({behavior:reduce?'auto':'smooth'}),40)};
+$('#promoSnap').onclick=()=>{openLayout('single');$$('.view').forEach(v=>v.hidden=v.id!=='v-studio');$('#snap').click()};
+
+/* ---- reader ---- */
+const myRating=id=>(LS.get('cc_rate',{}))[id]||0;
+const SEED_CMTS=[{userName:'Maya',userAvatar:'🐼',content:'The art style is so fun! Want to draw my own now.'},{userName:'Tariq',userAvatar:'🤖',content:'Read it twice already. Part 2 please!'}];
+function renderReader(id,keep){
+  curComic=id;const c=findComic(id,true);
+  if(!c){$('#reader').innerHTML=`<div class="back"><a class="btn sm ghost" href="#home">← ${t('back')}</a></div><div class="empty"><div class="big">${uLoaded?'🔎':'⏳'}</div><p>${t(uLoaded?'nf':'loading')}</p></div>`;readerSeen=null;return}
+  const mine=myRating(id),lk=liked('c:'+id),bm=bmAll()[id],U=!!c.user;
+  readerSeen=U?c.id+':'+c.likes+':'+c.pageCount:null;
+  const avg=mine?((c.rating*c.count+mine)/(c.count+1)).toFixed(1):U?'':c.rating.toFixed(1);
+  const likes=U?c.likes:c.likes+(lk?1:0),m=me();
+  $('#reader').innerHTML=`<div class="back"><a class="btn sm ghost" href="#home">← ${t('back')}</a></div>
+  <div class="rhead"><div class="cv">${U?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}</div><div><h2>${esc(c.title)}</h2><span class="pill">${esc(c.genre)}</span><span class="pill">${t('by')} ${esc(c.author)}</span><span class="pill">👁 ${c.views.toLocaleString()}</span><span class="pill">🖼 ${U?(c.pages.length||1)+' '+t('pages'):c.panels.length+' '+t('chap')}</span>
+  <p style="max-width:34em">${esc(c.syn)}</p>
+  ${U?'':`<div class="stars" role="group" aria-label="${t('rate_h')}">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${n<=mine?'on':''}" aria-label="${n}">⭐</button>`).join('')}</div><p class="muted">⭐ ${avg} · ${t('rate_h')}</p>`}
+  <div class="rowf" style="margin-top:12px"><button class="btn sm ${lk?'pk':'ghost'}" id="rLike">❤ ${likes}</button><button class="btn sm ${bm?'cy':'ghost'}" id="rBm">🔖 ${bm?t('bookmarked'):t('bookmark')}</button>${U&&c.authorId!==m.id?`<button class="btn sm ghost rep" id="rRep" aria-label="${t('report')}">🚩</button>`:''}</div></div></div>
+  <div class="strip${U?' wide':''}" id="strip">${U?c.pages.map(src=>`<div class="rp pg"><img alt="" src="${esc(src)}"></div>`).join(''):c.panels.map((p,i)=>`<div class="rp" data-s="${p.st}" style="--rr:${i%2?.6:-.6}deg">${scene(p.sc)}<canvas class="rfx" width="${S}" height="${S}"></canvas></div>`).join('')}</div>
+  <div class="endcard"><h3>${t('end_ch')}</h3><p>${t('end_p')}</p><p style="margin-top:14px"><a class="btn pri" href="#studio">🎨 ${t('make_own')}</a></p></div>
+  <div class="cmts"><h2>${t('cmt_h')}</h2><div class="rowf"><input class="field" id="cIn" maxlength="200" placeholder="${t('cmt_ph')}" aria-label="${t('cmt_h')}" style="flex:1 1 220px"><button class="btn sm" id="cGo">${t('cmt_go')}</button></div><div id="cList"></div></div>`;
+  if(!U)$$('#reader .rfx').forEach((cv,i)=>{const p=c.panels[i];cv._items=[...p.b.map(([ty,tx,x,y])=>({t:ty,text:tx,x,y,s:1,r:0})),...p.f.map(([tx,col,x,y])=>({t:'sfx',text:tx,c:col,x,y,s:1,r:i%2?3:-3}))]});
+  paintReader();
+  $$('#reader .stars button').forEach(b=>b.onclick=()=>{const r=LS.get('cc_rate',{});r[id]=+b.dataset.n;LS.set('cc_rate',r);renderReader(id,true)});
+  $('#rLike').onclick=async()=>{
+    if(U&&needSignIn()){toast(t('toast_signin'));return}
+    const was=liked('c:'+id);toggleLike('c:'+id);
+    if(U){await DB.inc('comics',id,'likesCount',was?-1:1);renderReader(id,true)}else renderReader(id,true)};
+  $('#rBm').onclick=()=>{const b=bmAll();if(b[id])delete b[id];else b[id]={p:progressNow(),ts:Date.now()};LS.set('cc_bm',b);toast(b[id]?t('toast_bm'):t('toast_unbm'));renderReader(id,true)};
+  const rr=$('#rRep');if(rr)rr.onclick=()=>report('comic',id);
+  if(U&&!sessionStorage['v_'+id]&&(DB.mode==='local'||DB.user)){sessionStorage['v_'+id]=1;DB.inc('comics',id,'viewCount',1)}
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
+  $$('#reader .rp').forEach(e=>io.observe(e));
+  const send=()=>{const v=$('#cIn').value.trim();if(!v)return;LOCAL.put('comments',{id:newId('m'),comicId:id,userId:m.id,userName:m.name,userAvatar:m.avatar,content:v,createdAt:iso()});$('#cIn').value=''};
+  $('#cGo').onclick=send;$('#cIn').onkeydown=e=>{if(e.key==='Enter')send()};
+  subscribe('cmts',LOCAL,'comments',list=>{const box=$('#cList');if(!box||curComic!==id)return;
+    box.innerHTML=[...list.filter(x=>x.comicId===id),...SEED_CMTS].map(x=>`<div class="cmt"><div class="av">${esc(x.userAvatar)}</div><div><b>${esc(x.userName)}</b>${esc(x.content)}</div></div>`).join('')});
+  if(!keep)window.scrollTo(0,0);
+}
+function paintReader(){$$('#reader .rfx').forEach(cv=>{const x=cv.getContext('2d');x.clearRect(0,0,S,S);(cv._items||[]).forEach(it=>drawItem(x,it,S,S,false,true))})}
+function progressNow(){const s=$('#strip');if(!s)return 0;const r=s.getBoundingClientRect(),v=(innerHeight-r.top)/r.height;return Math.max(0,Math.min(1,v))}
+let scrollQ=false;
+addEventListener('scroll',()=>{
+  if(route!=='read'||scrollQ)return;scrollQ=true;
+  requestAnimationFrame(()=>{scrollQ=false;const p=progressNow(),bar=$('#prog');bar.hidden=false;bar.style.width=Math.round(p*100)+'%';
+    const b=bmAll();if(curComic&&b[curComic]){b[curComic].p=Math.max(b[curComic].p,p);LS.set('cc_bm',b)}});
+},{passive:true});
+
+/* ---- community feed ---- */
+let FEED=[];
+const remixN=id=>(LS.get('cc_remix',{}))[id]||0;
+function renderFeed(){
+  $('#comNote').textContent=DB.mode==='firebase'?t('com_note_cloud'):t('com_note_local');
+  subscribe('feed',DB,'feed',list=>{FEED=list;if(route==='community')paintFeed()});paintFeed();
+}
+function paintFeed(){
+  const m=me(),posts=[...visible(FEED).map(p=>({...p,real:true})),...SEED_POSTS];
+  $('#feed').innerHTML=posts.map((p,i)=>{
+    const lk=liked('p:'+p.id),mineP=p.authorId&&p.authorId===m.id,src=p.scene?'scene:'+p.scene:(p.imageUrl||p.img);
+    const likes=p.real?(p.likesCount||0):(p.likesCount||0)+(lk?1:0),rm=p.real?(p.remixCount||0):(p.remixCount||0)+remixN(p.id);
+    return `<article class="post" style="--c:${COLS[i%4]}"><div class="ph"><span class="ava" style="background:hsl(${hue(p.authorName)} 80% 72%)">${esc((p.authorName||'?')[0])}</span><b>${esc(p.authorName)}</b></div>
+    <div class="fi">${p.scene?scene(p.scene):`<img alt="" src="${esc(src)}">`}</div>
+    <div class="pb"><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>${p.characterDesign?`<p class="design">🎨 ${esc(p.characterDesign)}</p>`:''}
+    <div class="pa"><button class="btn sm ${lk?'pk':'ghost'}" data-act="like" data-real="${p.real?1:0}" data-id="${esc(p.id)}">❤ ${likes}</button><button class="btn sm cy" data-act="remix" data-real="${p.real?1:0}" data-id="${esc(p.id)}" data-src="${esc(src)}">🔁 ${t('remix')} · ${rm}</button>${mineP?`<button class="btn sm ghost" data-act="del" data-id="${esc(p.id)}" aria-label="${t('del')}">🗑️</button>`:(p.real?`<button class="btn sm ghost rep" data-act="report" data-id="${esc(p.id)}" aria-label="${t('report')}">🚩</button>`:'')}</div></div></article>`}).join('');
+}
+$('#feed').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]');if(!b)return;const id=b.dataset.id,real=b.dataset.real==='1';
+  if(b.dataset.act==='like'){
+    if(real){if(needSignIn()){toast(t('toast_signin'));return}const was=liked('p:'+id);toggleLike('p:'+id);await DB.inc('feed',id,'likesCount',was?-1:1)}
+    else toggleLike('p:'+id);
+    paintFeed();
+  }else if(b.dataset.act==='remix'){
+    if(real){if(!needSignIn())DB.inc('feed',id,'remixCount',1)}else{const r=LS.get('cc_remix',{});r[id]=(r[id]||0)+1;LS.set('cc_remix',r)}
+    remixInto(b.dataset.src);
+  }else if(b.dataset.act==='report')report('feed',id);
+  else if(b.dataset.act==='del'&&await ask({title:t('q_del'),confirm:true})){await DB.del('feed',id)}
+});
+
+/* ---- collab rooms ---- */
+let COLLABS=[],collabArg=null,saveT;
+function renderCollab(arg){
+  collabArg=arg||null;
+  subscribe('collab',DB,'collaborations',list=>{COLLABS=visible(list);if(route==='collab')paintCollab()});paintCollab();
+}
+function paintCollab(){
+  if(collabArg){
+    if(document.activeElement&&document.activeElement.id==='script'&&$('#script'))return;
+    return paintRoom(COLLABS.find(r=>r.id===collabArg)||DB.get('collaborations',collabArg));
+  }
+  $('#collabBody').innerHTML=`<div class="hdr"><div><h2>${t('col_h')}</h2><p class="muted">${t('col_p')}</p></div><button class="btn pri" id="newC">➕ ${t('col_new')}</button></div>
+  <div class="rooms">${COLLABS.length?COLLABS.map((r,i)=>`<button class="room" data-id="${esc(r.id)}" style="--c:${COLS[(i+1)%4]}"><span class="st ${r.status==='completed'?'done':''}">${t(r.status==='completed'?'col_done':'col_active')}</span><h3>${esc(r.title)}</h3><p>${esc(r.currentPanelScript)||'…'}</p><p style="margin-top:8px">👥 ${Object.keys(r.members||{}).length||1} · ${esc(r.ownerName)}</p></button>`).join(''):`<div class="empty"><div class="big">👥</div><p>${t('col_empty')}</p></div>`}</div>`;
+  $('#newC').onclick=newCollab;$$('.room',$('#collabBody')).forEach(b=>b.onclick=()=>location.hash='#collab/'+b.dataset.id);
+}
+async function newCollab(){
+  if(needSignIn()){toast(t('toast_signin'));location.hash='#profile';return}
+  const r=await ask({title:t('nc_h'),fields:[{ph:t('nc_title'),max:60},{ph:t('nc_script'),area:true,max:2000}]});if(!r||!r[0])return;
+  const m=me(),doc={id:newId('k'),title:r[0],ownerId:m.id,ownerName:m.name,collaboratorIds:m.id,members:{[m.id]:m.name},status:'active',currentPanelScript:r[1]||'',updatedAt:iso()};
+  if(await DB.put('collaborations',doc))location.hash='#collab/'+doc.id;else toast(t('toast_post_fail'));
+}
+function paintRoom(r){
+  const body=$('#collabBody');
+  if(!r){body.innerHTML=`<div class="back"><a class="btn sm ghost" href="#collab">← ${t('back')}</a></div><div class="empty"><div class="big">🔎</div><p>${t('col_nf')}</p></div>`;return}
+  const m=me(),mem=r.members||{};
+  if(!mem[m.id]&&r.status!=='completed'&&!needSignIn()){mem[m.id]=m.name;r.members=mem;r.collaboratorIds=Object.keys(mem).join(',');r.updatedAt=iso();DB.put('collaborations',r)}
+  const owner=r.ownerId===m.id;
+  body.innerHTML=`<div class="back"><a class="btn sm ghost" href="#collab">← ${t('back')}</a></div>
+  <h2>${esc(r.title)}</h2><p class="muted">${t('by')} ${esc(r.ownerName)} · <span class="st ${r.status==='completed'?'done':''}">${t(r.status==='completed'?'col_done':'col_active')}</span></p>
+  <div class="mem">${Object.values(mem).map(n=>`<span class="pill">${esc(n)}</span>`).join('')}</div>
+  <label for="script" class="muted">${t('col_script')}</label>
+  <textarea class="field script" id="script" maxlength="4000">${esc(r.currentPanelScript)}</textarea>
+  <div class="rowf" style="margin-top:14px"><button class="btn cy" id="cpLink">🔗 ${t('col_link')}</button><a class="btn pk" href="#studio">🎨 ${t('col_draw')}</a>${owner?`<button class="btn ghost" id="cStat">${t(r.status==='completed'?'col_reopen':'col_finish')}</button>`:''}<span class="muted" id="saved"></span></div>
+  <p class="note">${DB.mode==='firebase'?t('col_note_cloud'):t('col_note_local')}</p>`;
+  const ta=$('#script');
+  ta.oninput=()=>{clearTimeout(saveT);saveT=setTimeout(async()=>{r.currentPanelScript=ta.value;r.updatedAt=iso();if(await DB.put('collaborations',r)){const s=$('#saved');if(s)s.textContent='✓ '+t('saved_ok')}},700)};
+  $('#cpLink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);toast(t('toast_copied'))}catch(e){toast(location.href)}};
+  const cs=$('#cStat');if(cs)cs.onclick=async()=>{r.status=r.status==='completed'?'active':'completed';r.updatedAt=iso();await DB.put('collaborations',r);paintRoom(r)};
+}
+
+/* ---- profile & library ---- */
+let ptab='mine';
+function renderProfile(){
+  subscribe('feedP',DB,'feed',list=>{FEED=list;if(route==='profile')paintProfile()});paintProfile();
+}
+function paintProfile(){
+  const p=prof(),m=me(),projects=LS.get('cc_projects',[]),bm=bmAll(),posts=FEED.filter(x=>x.authorId===m.id),likes=LS.get('cc_likes',[]).length,pubs=UCOMICS.filter(x=>x.authorId===m.id);
+  const empty=(e,k,cta)=>`<div class="empty"><div class="big">${e}</div><p>${t(k)}</p>${cta?`<p style="margin-top:14px"><a class="btn pri" href="#studio">🎨 ${t('cta_draw')}</a></p>`:''}</div>`;
+  let list='';
+  if(ptab==='mine')list=projects.length?projects.map((r,i)=>`<div class="cc" style="--c:${COLS[i%3]};cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${r.thumb}"></div><div class="in"><h3>${esc(r.title)}</h3><div class="sh-act"><button class="btn sm cy" data-o="${r.id}">${t('open')}</button><button class="btn sm ghost" data-d="${r.id}">🗑️ ${t('del')}</button></div></div></div>`).join(''):empty('🗂️','shelf_empty',true);
+  else if(ptab==='pub')list=pubs.length?pubs.map((d,i)=>{const c=normUser(d);return `<div class="cc" data-id="${esc(c.id)}" style="--c:${c.c};cursor:pointer"><div class="cv"><img alt="" src="${esc(c.coverUrl||'')}"><span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${c.pageCount||1} ${t('pages')}</span><span>❤ ${c.likes} · 👁 ${c.views}</span></div><div class="sh-act"><button class="btn sm ghost" data-dpub="${esc(c.id)}">🗑️ ${t('del')}</button></div></div></div>`}).join(''):empty('📖','pub_empty',true);
+  else if(ptab==='bm'){const it=Object.entries(bm).filter(([id])=>findComic(id));list=it.length?it.map(([id,v])=>card(findComic(id),v.p)).join(''):empty('🔖','bm_empty')}
+  else list=posts.length?posts.map(x=>`<div class="cc" style="--c:var(--pink);cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${esc(x.imageUrl)}"></div><div class="in"><h3>${esc(x.title)}</h3><div class="sh-act"><button class="btn sm ghost" data-dp="${esc(x.id)}">🗑️ ${t('del')}</button></div></div></div>`).join(''):empty('🌟','posts_empty');
+  $('#profileBody').innerHTML=`<h2>${t('prof_h')}</h2>
+  <div class="pf"><div class="big">${esc(m.avatar)}</div><div class="fld"><input class="field" id="pName" maxlength="24" value="${esc(p.name)}" placeholder="${t('name_ph')}" aria-label="${t('name_ph')}"><div class="rowf" style="margin-top:10px" id="pAv">${AVATARS.map(a=>`<button class="chip${a===p.avatar?' on':''}" data-a="${a}" aria-label="${a}">${a}</button>`).join('')}</div></div></div>
+  <p class="note">${t('safe_tip')}</p>
+  <div class="stats"><div><b>${projects.length}</b>${t('st_comics')}</div><div><b>${pubs.length}</b>${t('pt_pub')}</div><div><b>${posts.length}</b>${t('st_posts')}</div><div><b>${likes}</b>${t('st_likes')}</div></div>
+  <div class="seg" id="pSeg">${[['mine','pt_mine'],['pub','pt_pub'],['bm','pt_bm'],['posts','pt_posts']].map(([k,l])=>`<button class="chip${ptab===k?' on':''}" data-k="${k}">${t(l)}</button>`).join('')}</div>
+  <div class="shelf" id="pList">${list}</div>
+  <div class="note" style="margin-top:34px">${DB.mode==='firebase'?(DB.user?`${t('acct_in')} <b>${esc(DB.user.displayName||'')}</b>`:t('acct_out')):t('acct_local')}
+  <div class="rowf" style="margin-top:10px">${DB.mode==='firebase'?(DB.user?`<button class="btn sm ghost" id="so">${t('sign_out')}</button>`:`<button class="btn sm" id="si">${t('sign_in')}</button>`):''}<button class="btn sm ghost" id="wipe">🧹 ${t('wipe')}</button></div></div>`;
+  $('#pName').onchange=e=>{const q=prof();q.name=e.target.value.trim();LS.set('cc_profile',q);paintProfile()};
+  $$('#pAv .chip').forEach(b=>b.onclick=()=>{const q=prof();q.avatar=b.dataset.a;LS.set('cc_profile',q);paintProfile()});
+  $$('#pSeg .chip').forEach(b=>b.onclick=()=>{ptab=b.dataset.k;paintProfile()});
+  bindCards($('#pList'));
+  $$('[data-o]',$('#pList')).forEach(b=>b.onclick=()=>openProject(b.dataset.o));
+  $$('[data-d]',$('#pList')).forEach(b=>b.onclick=()=>deleteProject(b.dataset.d,paintProfile));
+  $$('[data-dp]',$('#pList')).forEach(b=>b.onclick=async()=>{if(await ask({title:t('q_del'),confirm:true})){await DB.del('feed',b.dataset.dp)}});
+  $$('[data-dpub]',$('#pList')).forEach(b=>b.onclick=async e=>{e.stopPropagation();if(await ask({title:t('q_del'),confirm:true})){await DB.del('comics',b.dataset.dpub)}});
+  const si=$('#si');if(si)si.onclick=()=>DB.signIn().catch(()=>toast(t('toast_post_fail')));
+  const so=$('#so');if(so)so.onclick=()=>DB.signOut();
+  $('#wipe').onclick=async()=>{if(await ask({title:t('q_wipe'),confirm:true})){Object.keys(localStorage).filter(k=>k.indexOf('cc_')===0).forEach(k=>localStorage.removeItem(k));location.hash='#home';location.reload()}};
+}
+
+/* ===== main ===== */
+const NAV=[['home','🏠','nav_home'],['studio','🎨','nav_studio'],['community','🌟','nav_community'],['collab','👥','nav_collab'],['profile','👤','nav_profile']];
+let route='home';
+function buildNav(){
+  [$('#navT'),$('#navB')].forEach((n,i)=>{n.innerHTML=NAV.map(([k,e,l])=>`<a href="#${k}" data-k="${k}">${i?`<b>${e}</b>`:''}<span>${t(l)}</span></a>`).join('')});markNav();
+}
+function markNav(){const k=route==='read'?'home':route;$$('.nav a').forEach(a=>{if(a.dataset.k===k)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')})}
+function renderRoute(){
+  const [v0,arg]=(location.hash.slice(1)||'home').split('/');
+  let v=['home','studio','community','collab','profile','read'].includes(v0)?v0:'home';
+  if(v==='read'&&!arg)v='home';
+  route=v;
+  $$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
+  $('#prog').hidden=v!=='read';markNav();
+  if(v==='home')renderHome();
+  else if(v==='read')renderReader(arg);
+  else if(v==='studio')studioPane();
+  else if(v==='community')renderFeed();
+  else if(v==='collab')renderCollab(arg);
+  else if(v==='profile')renderProfile();
+}
+function go(){renderRoute();window.scrollTo(0,0)}
+function onAuthChange(){renderRoute()}
+addEventListener('hashchange',go);
+
+function renderAll(){applyLang();buildNav();$$('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));renderRoute();redrawAll()}
+$('#langB').onclick=()=>{lang=lang==='en'?'bn':'en';LS.set('cc_lang',lang);renderAll()};
+$('#themeB').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+/* start */
+setTheme(LS.get('cc_theme',matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'));
+applyLang();buildNav();
+startShared();probeAI();
+$('#bgs').innerHTML=$('#bgs').innerHTML;
+renderRoute();
+if(document.fonts){['400 20px Bangers','800 20px "Baloo 2"','800 20px "Baloo Da 2"'].forEach(f=>document.fonts.load(f,'Aঅ').then(redrawAll).catch(()=>{}));document.fonts.ready.then(redrawAll)}
+if(window.COMICCRAFT_FIREBASE&&window.COMICCRAFT_FIREBASE.apiKey)enableFirebase(window.COMICCRAFT_FIREBASE).catch(e=>console.warn('Firebase not enabled:',e));
+if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+})();
 </script>
 </body>
 </html>

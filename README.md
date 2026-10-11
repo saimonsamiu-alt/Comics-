@@ -1,56 +1,46 @@
-# ComicCraft - Hand-Drawn Animated Comic Maker 🎨📖
+# ComicCraft Web
 
-ComicCraft turns paper notebook drawings into dynamic, animated comics and webtoons using AI inking, cel-shading art styles, speech bubbles, child-friendly stickers, and interactive panel layouts.
+The web version of the ComicCraft Android app. Works on phones, tablets and computers, and can be installed like an app (PWA).
 
----
+## What is inside
+- **Explore**: search and genre filter, 6 sample comics, "keep reading" with bookmarks
+- **Reader**: panel-by-panel reading, rating, likes, bookmarks, comments
+- **Studio**: 5 page layouts (single, 3-strip, 4-grid, 2-split, widescreen), pen and eraser, camera / photo to comic ink, 5 backgrounds, speech / thought / shout / whisper bubbles, sound effects, 32 stickers, 5 color styles, camera motion (and WebM video export), undo / redo, PNG download and share
+- **Publish comic**: publish pages as a comic (up to 6 pages) that everyone can read in Explore
+- **AI Comic Magic**: redraw a sketch in manga / webtoon / neon style (needs Vercel + Gemini key)
+- **Feed**: community posts, shared likes, remix any picture, report button
+- **Collab**: shared story scripts in rooms with an invite link
+- **Profile & Library**: nickname, avatar, saved comics, bookmarks, your posts
+- English and Bangla, dark and light theme
 
-## 🚀 How to Open and Run from GitHub in Android Studio
-
-If you cloned or downloaded this repository from GitHub, follow these simple steps to open and run it:
-
-### 1. Requirements
-* **Android Studio** (Koala / Ladybug / Iguana or later recommended)
-* **JDK 17 or JDK 21** (bundled directly with Android Studio)
-* **Android Device or Emulator** (API 26+)
-
-### 2. Opening the Project
-1. Launch **Android Studio**.
-2. Click **File > Open...** (or **Open** from the welcome screen).
-3. Select the root folder of this project (`ComicCraft`) and click **OK**.
-4. Android Studio will automatically detect the **Gradle Wrapper** (`gradlew`) and sync all dependencies.
-
-### 3. Running the App
-* Click the **Green Play button (▶ Run 'app')** in the top toolbar to build and install the app onto your emulator or connected Android device.
-
-### 4. Command Line Build
-To build the debug APK via terminal:
-```bash
-# On macOS / Linux:
-./gradlew assembleDebug
-
-# On Windows:
-gradlew.bat assembleDebug
+## Files (upload all of them to the repo root, keep the folders)
 ```
-The resulting APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`.
-
-To run local unit tests:
-```bash
-./gradlew testDebugUnitTest
+index.html  manifest.webmanifest  sw.js  firebase-config.js  vercel.json
+firestore.rules  SETUP_BN.md
+api/ai-ink.js
+assets/banner.jpg  assets/icon.jpg
+icons/icon-192.png  icons/icon-512.png  icons/apple-touch-icon.png
 ```
+**Step-by-step setup for Firebase, moderation and AI: see `SETUP_BN.md` (Bangla).**
 
----
+## Publish
+- **GitHub Pages**: Settings > Pages > Deploy from a branch > `main` / root
+- **Vercel**: Import the repo, Framework Preset **Other**, empty Build Command, Deploy
 
-## 🌟 Features Included
+Open it from the published https address (not by double-clicking the file) so photos, remix and install work.
+When you publish a new version, change `V='cc-v1'` in `sw.js` to `cc-v2` so phones pick up the update.
 
-1. **Comic Page Layout Selection Screen**: Choose between:
-   * **Single Epic Panel** (1:1 Splash art & cover showcase)
-   * **3-Panel Story Strip** (Setup • Conflict • Punchline webtoon strip)
-   * **4-Panel Comic Grid** (2x2 classic Yonkoma / Newspaper gag strip)
-   * **2-Panel Action Split** (Dominant action + reaction showdown)
-   * **Cinematic Widescreen** (16:9 anime movie panoramic)
-2. **AI Lineart & Sketch Inking**: Whitens notebook paper texture, sharpens pencil strokes into bold comic inks, and adds vibrant cel-shaded color grading.
-3. **Speech Balloons & Pop-Art Stickers**: Fully draggable, resizable, and customizable dialogue balloons (Speech, Thought, Shout, Whisper) and child-friendly stickers.
-4. **Undo / Redo Stack**: Step forward or backward through any changes to dialogue, stickers, sketches, and styling.
-5. **High-Res Gallery Export & Sharing**: Export finished panels as 1200x1200px lossless PNGs directly to device gallery (`Pictures/ComicCraft`) with zero storage permissions (Android Scoped Storage) or share via system share sheet to Discord, Instagram, Messages, or WhatsApp.
-6. **Firebase Firestore Cloud Persistence**: Sync bookmarks, user profiles, and save complete comic panel states with server timestamps.
-7. **Offline-First Local Room Database**: Stores paper camera captures and drawings locally on device.
+## Local mode (default)
+Everything is saved in the visitor's browser. The Feed and Collab work on one device (collab even syncs between tabs). Nothing is uploaded.
+
+## Turn on the shared Feed, comics and live Collab (optional)
+Paste your Firebase Web config into `firebase-config.js`, enable Google sign-in, publish `firestore.rules`. Details in `SETUP_BN.md`. This cloud code and the rules were written but not tested against a real Firebase project: run `firestore.test.js` in the emulator first.
+
+## AI Comic Magic (optional)
+`api/ai-ink.js` is a Vercel serverless function that calls Gemini. Set `GEMINI_API_KEY` in Vercel. The button stays hidden until the function answers. Untested against the real Gemini API (tested with a fake response).
+
+## Kids and safety
+The app asks for a nickname only, and tells kids not to share personal details. Google sign-in is for 13+ or with a parent. Before turning on the public Feed for under-13s, check COPPA / local child-privacy rules and plan moderation (reports, removal).
+
+## Moderation
+Readers can report posts and comics (collection `reports`). Set `hidden: true` on a document in the Firebase console to hide it.
