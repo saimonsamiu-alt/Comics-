@@ -30,6 +30,16 @@ service cloud.firestore {
           && (!('pagesJson' in request.resource.data) || request.resource.data.pagesJson.size() < 900000))
         || onlyBumps(['likesCount', 'viewCount']));
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+
+      // Every page of a comic is its own document, so a comic can have many pages and chapters.
+      match /pages/{pageId} {
+        allow read: if true;
+        allow create, update: if isSignedIn()
+          && get(/databases/$(database)/documents/comics/$(comicId)).data.authorId == request.auth.uid
+          && request.resource.data.img is string && request.resource.data.img.size() < 400000;
+        allow delete: if isSignedIn()
+          && get(/databases/$(database)/documents/comics/$(comicId)).data.authorId == request.auth.uid;
+      }
     }
 
     match /collaborations/{collabId} {

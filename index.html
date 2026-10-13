@@ -252,6 +252,39 @@ select.field{appearance:auto}
 #aiBox[hidden]{display:none}
 #aiBox h3{font-size:1.25rem;color:var(--pink)}
 
+/* camera scanner, snap card, featured carousel, story rows */
+.cam{position:fixed;inset:0;z-index:90;background:#000;color:#fff;display:flex;flex-direction:column}
+.cam-top{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;gap:10px}
+.cam-top .ico{background:rgba(255,255,255,.15);border-color:transparent;color:#fff}
+.cam-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden}
+.cam-stage video,.cam-stage canvas{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000}
+.cam-guide{position:absolute;inset:7% 6%;border:3px dashed var(--yellow);border-radius:10px;pointer-events:none;background:linear-gradient(90deg,transparent 33%,rgba(255,255,255,.25) 33%,rgba(255,255,255,.25) calc(33% + 1px),transparent calc(33% + 1px),transparent 66%,rgba(255,255,255,.25) 66%,rgba(255,255,255,.25) calc(66% + 1px),transparent calc(66% + 1px)),linear-gradient(0deg,transparent 33%,rgba(255,255,255,.25) 33%,rgba(255,255,255,.25) calc(33% + 1px),transparent calc(33% + 1px),transparent 66%,rgba(255,255,255,.25) 66%,rgba(255,255,255,.25) calc(66% + 1px),transparent calc(66% + 1px))}
+.cam-msg{position:absolute;left:16px;right:16px;top:30%;text-align:center;background:rgba(0,0,0,.75);padding:14px;border-radius:14px}
+.cam-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:#000}
+#camLive{flex-direction:column}
+#camDenied{justify-content:center}
+.shutter{width:76px;height:76px;border-radius:50%;border:6px solid #fff;background:var(--orange);cursor:pointer;box-shadow:0 0 0 4px rgba(255,255,255,.25)}
+.shutter:active{transform:scale(.92)}
+.boost{display:flex;align-items:center;gap:8px;font-weight:800;min-height:48px}
+.boost input{width:24px;height:24px;accent-color:var(--orange)}
+.snapcard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:16px;width:100%;margin-top:18px;background:linear-gradient(120deg,#FFE0D2,#FFC6A8);color:var(--ink);border:4px solid #000;box-shadow:7px 7px 0 var(--orange);padding:16px 18px;font-family:var(--body);font-weight:600}
+.snapcard .big{font-size:2.6rem;line-height:1}
+.snapcard .go{margin-left:auto;font-size:1.8rem;font-weight:800}
+.snapcard:hover,.snapcard:focus-visible{transform:translateY(-3px)}
+.sub-h{color:var(--orange);font-size:1.3rem;margin:26px 0 -6px}
+.car{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:18px 8px 26px;margin:0 -8px}
+.car .cc{flex:0 0 min(78vw,300px);scroll-snap-align:start}
+.stories{display:grid;gap:12px;margin-top:6px}
+.lr{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:14px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px;font-family:var(--body);font-weight:600;color:var(--tx)}
+.lr:hover,.lr:focus-visible{border-color:var(--orange)}
+.lr .th{flex:0 0 84px;width:84px;height:84px;border-radius:12px;overflow:hidden;border:3px solid #000;background:#222}
+.lr .th svg,.lr .th img{width:100%;height:100%;object-fit:cover;display:block}
+.lr h3{font-size:1.45rem;margin-bottom:2px}
+.lr p{color:var(--mut);font-size:.98rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lr .m{color:var(--orange);font-weight:800;font-size:.95rem}
+
+.chh{font-size:1.9rem;color:var(--yellow);text-align:center;margin:10px 0 -8px}
+
 </style>
 </head>
 <body>
@@ -287,14 +320,16 @@ select.field{appearance:auto}
     <div class="promo">
       <div class="big">📸</div>
       <div><h3 data-i18n="promo_h"></h3><p data-i18n="promo_p"></p></div>
-      <button class="btn" id="promoSnap">📷 <span data-i18n="snap"></span></button>
+      <div class="rowf" style="margin-left:auto"><button class="btn" id="promoSnap">📷 <span data-i18n="snap"></span></button><button class="btn cy" id="promoNew">🖌️ <span data-i18n="promo_new"></span></button></div>
     </div>
     <div id="cont" hidden class="sec"><h2 data-i18n="cont_h"></h2><div class="shelf" id="contList"></div></div>
     <div class="sec" id="comics">
       <h2 data-i18n="feat_h"></h2>
+      <div class="car" id="feat"></div>
+      <h2 data-i18n="all_h" style="margin-top:30px"></h2>
       <input class="field" id="q" type="search" data-i18n-ph="search_ph" aria-label="Search" style="margin-top:14px">
       <div class="chips" id="genres"></div>
-      <div class="shelf" id="library"></div>
+      <div class="stories" id="library"></div>
     </div>
     <div class="sec" id="ucSec" hidden><h2 data-i18n="cc_h"></h2><div class="shelf" id="ucList"></div></div>
     <p class="foot" data-i18n="foot"></p>
@@ -309,6 +344,8 @@ select.field{appearance:auto}
   <div class="wrap picker" id="picker">
     <h2 data-i18n="pick_h"></h2>
     <p class="muted" data-i18n="pick_p" style="margin-top:6px"></p>
+    <button class="snapcard" id="snapCard"><span class="big">📷</span><span><b data-i18n="cam_card_t"></b><br><span data-i18n="cam_card_s"></span></span><span class="go">➜</span></button>
+    <h3 class="sub-h" data-i18n="fmt_h"></h3>
     <div class="lcards" id="lcards"></div>
     <div id="projWrap" hidden class="sec"><h2 data-i18n="proj_h"></h2><div class="shelf" id="projList"></div></div>
   </div>
@@ -354,9 +391,11 @@ select.field{appearance:auto}
         <div class="pal" id="pal"></div>
         <label class="rng"><span data-i18n="size"></span><input id="size" type="range" min="2" max="40" value="8"><i><u id="dot"></u></i></label>
         <h3 data-i18n="scan_h"></h3>
-        <label class="btn pk">📷 <span data-i18n="snap"></span><input id="snap" class="vh" type="file" accept="image/*" capture="environment"></label>
+        <button class="btn pk" id="snapBtn">📷 <span data-i18n="snap"></span></button><input id="snap" class="vh" type="file" accept="image/*" capture="environment" aria-label="Camera">
         <label class="btn cy">🖼️ <span data-i18n="photo"></span><input id="photo" class="vh" type="file" accept="image/*"></label>
         <button class="btn" id="ink">✨ <span data-i18n="ink"></span></button>
+        <h3 data-i18n="free_h"></h3>
+        <div class="rowf"><button class="btn" id="fxToon">🎨 <span data-i18n="fx_toon"></span></button><button class="btn ghost" id="fxManga">📰 <span data-i18n="fx_manga"></span></button></div>
         <div id="aiBox" hidden><h3 data-i18n="ai_h"></h3><div class="rowf" id="aiStyles"></div><button class="btn pri" id="aiGo">✨ <span data-i18n="ai_go"></span></button></div>
         <h3 data-i18n="bg_h"></h3>
         <div class="rowf" id="bgs"></div>
@@ -407,6 +446,13 @@ select.field{appearance:auto}
   <div id="dlgF"></div>
   <menu><button class="btn pri" value="ok" id="dlgOk"></button><button class="btn ghost" value="cancel" formnovalidate id="dlgNo"></button></menu>
 </form></dialog>
+<div id="cam" class="cam" hidden role="dialog" aria-modal="true" aria-label="Camera">
+  <div class="cam-top"><button class="ico" id="camX" aria-label="Close">✖</button><b data-i18n="cam_h"></b><span class="rowf"><button class="ico" id="camTorch" hidden aria-label="Torch">🔦</button><button class="ico" id="camFlip" aria-label="Flip camera">🔄</button></span></div>
+  <div class="cam-stage"><video id="camV" playsinline muted></video><canvas id="camP" hidden></canvas><div class="cam-guide" id="camG"></div><p class="cam-msg" id="camMsg" hidden></p></div>
+  <div class="cam-bar" id="camLive"><p class="muted" data-i18n="cam_guide"></p><button class="shutter" id="camShot" aria-label="Capture"></button></div>
+  <div class="cam-bar" id="camReview" hidden><label class="boost"><input type="checkbox" id="camBoost" checked> ✨ <span data-i18n="cam_boost"></span></label><span class="rowf"><button class="btn ghost" id="camRetake">↺ <span data-i18n="cam_retake"></span></button><button class="btn pri" id="camUse">✔ <span data-i18n="cam_use"></span></button></span></div>
+  <div class="cam-bar" id="camDenied" hidden><button class="btn cy" id="camPick">🖼️ <span data-i18n="photo"></span></button></div>
+</div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="firebase-config.js"></script>
@@ -459,8 +505,11 @@ toast_saved:'Saved to your library!',toast_full:'Your library is full. Delete an
 toast_nomotion:'Your browser cannot record video. Try Chrome or Edge.',toast_rec:'Recording your motion comic… 5 seconds',
 toast_draw_first:'Draw something in the Studio first!',toast_signin:'Please sign in first.',toast_posted:'Posted to the feed!',toast_post_fail:'That did not work. Please try again.',toast_remix:'Remix ready! Make it your own.',toast_remix_fail:'Could not load that picture.',
 cc_h:'From the community',pages:'pages',nf:'We could not find this comic.',loading:'Loading…',report:'Report',rep_h:'Report this',rep_1:'Not suitable for kids',rep_2:'Shows personal information',rep_3:'Bullying or mean words',rep_4:'Something else',toast_reported:'Thank you. We will take a look.',
-pub:'Publish comic',pub_h:'Publish as a comic',pub_note:'Everyone can read published comics. Do not include personal information. Choose a comic of yours to add this page to it (up to 6 pages).',pub_new:'Start a new comic',pub_title:'Comic title',pub_syn:'What is it about?',pub_big:'This page is too big to publish. Try a simpler page.',pub_max:'A comic can have up to 6 pages.',pub_need_title:'Please give your comic a title.',toast_pub:'Your comic is published!',toast_pub_add:'Page added to your comic!',pt_pub:'Published',pub_empty:'You have not published a comic yet. Draw a page, then tap Publish comic.',
+pub:'Publish comic',pub_h:'Publish as a comic',pub_note:'Everyone can read published comics. Do not include personal information. Choose one of your comics to add this page to it.',pub_new:'Start a new comic',pub_title:'Comic title',pub_syn:'What is it about?',pub_big:'This page is too big to publish. Try a simpler page.',pub_max:'A comic can have up to 100 pages.',chapter:'Chapter',chapters:'chapters',pub_same:'Add to the current chapter',pub_newch:'Start a new chapter',pub_need_title:'Please give your comic a title.',toast_pub:'Your comic is published!',toast_pub_add:'Page added to your comic!',pt_pub:'Published',pub_empty:'You have not published a comic yet. Draw a page, then tap Publish comic.',
 ai_h:'AI Comic Magic',ai_manga:'Manga ink',ai_webtoon:'Color webtoon',ai_neon:'Neon noir',ai_go:'AI Comic Magic',ai_busy:'AI is drawing… (up to a minute)',ai_done:'Done! Tap Undo if you prefer the original.',ai_fail:'AI could not finish. Please try again.',ai_rate:'Too many tries. Please wait a few minutes.',ai_consent_h:'Send this picture to Google AI?',ai_consent:'To redraw your picture, it is sent to Google Gemini AI. Do not use pictures with faces or private information. If you are under 13, ask a parent first.',
+cam_h:'Sketch scanner',cam_guide:'Keep your drawing flat and inside the frame',cam_boost:'AI Lineart Boost',cam_retake:'Retake',cam_use:'Use in Comic',cam_denied:'The camera is not available. Allow the camera in your browser settings, or pick a photo instead.',cam_card_t:'Snap Paper Sketch',cam_card_s:'Photograph your notebook drawing with a live viewfinder',fmt_h:'Choose comic format',promo_new:'New comic panel',all_h:'All stories',pt_sk:'My sketches',sk_empty:'No scanned sketches yet. Snap a paper sketch and it will be saved here.',sk_name:'Sketch',rename:'Rename',toast_sk_open:'Sketch opened. Now add bubbles and stickers!',
+com_note_sheets:'Be kind and keep it friendly. New posts and comics show up for everyone after a grown-up approves them. Never share personal details.',col_note_sheets:'Changes appear for everyone with the link within about 20 seconds.',acct_sheets:'No account needed. Your nickname is shown when you post. Posts you make can only be changed from this browser.',pending:'Waiting for approval. Only you can see this until it is approved.',
+free_h:'Comic filters (free, on your device)',fx_toon:'Color toon',fx_manga:'Manga screentone',unsafe_pii:'Please do not share emails, phone numbers or links.',unsafe_rude:'Please use kind words.',
 post_h:'Post to the feed',post_title:'Title',post_desc:'Tell us about it (optional)',untitled:'My comic',guest:'Guest'},
 bn:{
 nav_home:'এক্সপ্লোর',nav_studio:'স্টুডিও',nav_community:'ফিড',nav_collab:'কোল্যাব',nav_profile:'প্রোফাইল',
@@ -507,8 +556,11 @@ toast_draw_first:'আগে স্টুডিওতে কিছু আঁক�
 acct_out:'অন্যদের সাথে পোস্ট ও কোল্যাব করতে সাইন ইন করো। (সাইন ইন ১৩+ বছর বয়সীদের জন্য, বা বাবা-মায়ের সাথে।)',acct_in:'সাইন ইন করা আছে:',col_note_local:'এই ডিভাইসে কোল্যাব তোমার নিজের ট্যাবগুলোর মধ্যে সিঙ্ক হয়। আলাদা ডিভাইস থেকে একসাথে লিখতে ক্লাউড সিঙ্ক চালু করতে হবে।',col_note_cloud:'লিংক আছে এমন সবার সাথে পরিবর্তন সাথে সাথে সিঙ্ক হয়।',
 toast_nomotion:'তোমার ব্রাউজার ভিডিও রেকর্ড করতে পারে না। Chrome বা Edge চেষ্টা করো।',toast_rec:'মোশন কমিক রেকর্ড হচ্ছে… ৫ সেকেন্ড',toast_signin:'আগে সাইন ইন করো।',toast_post_fail:'কাজ হয়নি। আবার চেষ্টা করো।',toast_remix_fail:'ছবিটি লোড করা যায়নি।',
 cc_h:'কমিউনিটির কমিক',pages:'পৃষ্ঠা',nf:'এই কমিক খুঁজে পাইনি।',loading:'লোড হচ্ছে…',report:'রিপোর্ট',rep_h:'এটা রিপোর্ট করো',rep_1:'ছোটদের জন্য ঠিক নয়',rep_2:'ব্যক্তিগত তথ্য আছে',rep_3:'খারাপ ব্যবহার বা গালি',rep_4:'অন্য কিছু',toast_reported:'ধন্যবাদ। আমরা দেখব।',
-pub:'কমিক প্রকাশ',pub_h:'কমিক হিসেবে প্রকাশ করো',pub_note:'প্রকাশ করা কমিক সবাই পড়তে পারবে। ব্যক্তিগত তথ্য দিও না। নিজের আগের কমিক বেছে নিলে এই পেজ সেটাতে যোগ হবে (সর্বোচ্চ ৬ পৃষ্ঠা)।',pub_new:'নতুন কমিক শুরু',pub_title:'কমিকের নাম',pub_syn:'এটা কী নিয়ে?',pub_big:'এই পেজ প্রকাশের জন্য বড় বেশি। সহজ একটা পেজ চেষ্টা করো।',pub_max:'একটা কমিকে সর্বোচ্চ ৬ পৃষ্ঠা থাকতে পারে।',pub_need_title:'কমিকের একটা নাম দাও।',toast_pub:'তোমার কমিক প্রকাশ হয়েছে!',toast_pub_add:'তোমার কমিকে পেজ যোগ হয়েছে!',pt_pub:'প্রকাশিত',pub_empty:'এখনো কোনো কমিক প্রকাশ করোনি। একটা পেজ এঁকে “কমিক প্রকাশ” চাপো।',
+pub:'কমিক প্রকাশ',pub_h:'কমিক হিসেবে প্রকাশ করো',pub_note:'প্রকাশ করা কমিক সবাই পড়তে পারবে। ব্যক্তিগত তথ্য দিও না। নিজের আগের কমিক বেছে নিলে এই পেজ সেটাতে যোগ হবে।',pub_new:'নতুন কমিক শুরু',pub_title:'কমিকের নাম',pub_syn:'এটা কী নিয়ে?',pub_big:'এই পেজ প্রকাশের জন্য বড় বেশি। সহজ একটা পেজ চেষ্টা করো।',pub_max:'একটা কমিকে সর্বোচ্চ ১০০ পৃষ্ঠা থাকতে পারে।',chapter:'অধ্যায়',chapters:'অধ্যায়',pub_same:'এখনকার অধ্যায়ে যোগ করো',pub_newch:'নতুন অধ্যায় শুরু করো',pub_need_title:'কমিকের একটা নাম দাও।',toast_pub:'তোমার কমিক প্রকাশ হয়েছে!',toast_pub_add:'তোমার কমিকে পেজ যোগ হয়েছে!',pt_pub:'প্রকাশিত',pub_empty:'এখনো কোনো কমিক প্রকাশ করোনি। একটা পেজ এঁকে “কমিক প্রকাশ” চাপো।',
 ai_h:'এআই কমিক ম্যাজিক',ai_manga:'ম্যাঙ্গা কালি',ai_webtoon:'রঙিন ওয়েবটুন',ai_neon:'নিয়ন নোয়ার',ai_go:'এআই কমিক ম্যাজিক',ai_busy:'এআই আঁকছে… (এক মিনিট পর্যন্ত লাগতে পারে)',ai_done:'হয়ে গেছে! আসলটা চাইলে “আগের ধাপ” চাপো।',ai_fail:'এআই শেষ করতে পারেনি। আবার চেষ্টা করো।',ai_rate:'অনেকবার চেষ্টা হয়েছে। কয়েক মিনিট অপেক্ষা করো।',ai_consent_h:'এই ছবি গুগল এআই-কে পাঠাবে?',ai_consent:'ছবি নতুন করে আঁকতে এটা Google Gemini এআই-কে পাঠানো হয়। মুখ বা ব্যক্তিগত তথ্য আছে এমন ছবি দিও না। ১৩ বছরের কম বয়স হলে আগে বাবা-মাকে জিজ্ঞেস করো।',
+cam_h:'স্কেচ স্ক্যানার',cam_guide:'আঁকা কাগজ সোজা করে ফ্রেমের ভেতরে রাখো',cam_boost:'এআই লাইনআর্ট বুস্ট',cam_retake:'আবার তোলো',cam_use:'কমিকে ব্যবহার করো',cam_denied:'ক্যামেরা পাওয়া যাচ্ছে না। ব্রাউজারের সেটিংসে ক্যামেরার অনুমতি দাও, অথবা একটা ছবি বাছাই করো।',cam_card_t:'কাগজের স্কেচের ছবি তোলো',cam_card_s:'লাইভ ভিউফাইন্ডারে খাতার আঁকা ছবি তোলো',fmt_h:'কমিকের ধরন বাছো',promo_new:'নতুন কমিক প্যানেল',all_h:'সব গল্প',pt_sk:'আমার স্কেচ',sk_empty:'এখনো কোনো স্ক্যান করা স্কেচ নেই। কাগজের স্কেচের ছবি তুললে এখানে সেভ হবে।',sk_name:'স্কেচ',rename:'নাম বদলাও',toast_sk_open:'স্কেচ খুলেছে। এবার বুদবুদ আর স্টিকার যোগ করো!',
+com_note_sheets:'ভদ্র ও বন্ধুসুলভ থাকো। নতুন পোস্ট ও কমিক বড় কেউ অনুমোদন করলে তবেই সবার কাছে দেখা যায়। ব্যক্তিগত তথ্য কখনো দিও না।',col_note_sheets:'লিংক আছে এমন সবার কাছে পরিবর্তন প্রায় ২০ সেকেন্ডের মধ্যে দেখা যায়।',acct_sheets:'অ্যাকাউন্ট লাগে না। পোস্ট করলে তোমার ডাকনাম দেখা যায়। তোমার পোস্ট শুধু এই ব্রাউজার থেকেই বদলানো যায়।',pending:'অনুমোদনের অপেক্ষায়। অনুমোদন না হওয়া পর্যন্ত শুধু তুমিই এটা দেখতে পাবে।',
+free_h:'কমিক ফিল্টার (বিনামূল্যে, তোমার ডিভাইসেই)',fx_toon:'রঙিন টুন',fx_manga:'ম্যাঙ্গা স্ক্রিনটোন',unsafe_pii:'ইমেইল, ফোন নম্বর বা লিংক দিও না।',unsafe_rude:'ভালো ভালো কথা লেখো।',
 post_h:'ফিডে পোস্ট করো',post_title:'নাম',post_desc:'এটা নিয়ে কিছু লেখো (ইচ্ছে হলে)',untitled:'আমার কমিক',guest:'অতিথি'}};
 
 /* ===== core ===== */
@@ -549,10 +601,12 @@ const ask1=async(title,value)=>{const r=await ask({title,fields:[{value}]});retu
 
 /* database: local (always) + optional cloud (Firebase) for the shared collections */
 function makeLocal(){
-  const subs={},rd=c=>LS.get('cc_db_'+c,[]),emit=c=>(subs[c]||[]).forEach(f=>f(rd(c)));
+  const subs={},rd=c=>LS.get('cc_db_'+c,[]);
+  const view=(c,o)=>{const l=rd(c);if(!o)return l;const k=o.order,d=o.dir==='asc'?1:-1;return [...l].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*d).slice(0,o.limit||60)};
+  const emit=c=>(subs[c]||[]).forEach(s=>s.f(view(c,s.o)));
   addEventListener('storage',e=>{if(e.key&&e.key.indexOf('cc_db_')===0)emit(e.key.slice(6))});
   return{mode:'local',user:null,
-    sub(c,f){(subs[c]=subs[c]||[]).push(f);f(rd(c));return()=>{subs[c]=(subs[c]||[]).filter(x=>x!==f)}},
+    sub(c,f,o){const s={f,o};(subs[c]=subs[c]||[]).push(s);f(view(c,o));return()=>{subs[c]=(subs[c]||[]).filter(x=>x!==s)}},
     put(c,doc){const l=rd(c),i=l.findIndex(d=>d.id===doc.id);if(i>=0)l[i]=doc;else l.unshift(doc);const ok=LS.set('cc_db_'+c,l);emit(c);return Promise.resolve(ok)},
     del(c,id){LS.set('cc_db_'+c,rd(c).filter(d=>d.id!==id));emit(c);return Promise.resolve(true)},
     inc(c,id,f,d){const l=rd(c),x=l.find(o=>o.id===id);if(x){x[f]=Math.max(0,(x[f]||0)+d);LS.set('cc_db_'+c,l);emit(c)}return Promise.resolve(!!x)},
@@ -561,14 +615,14 @@ function makeLocal(){
 const LOCAL=makeLocal();
 let DB=makeLocal();
 const unsubs={};
-function subscribe(key,db,col,fn){if(unsubs[key])unsubs[key]();unsubs[key]=db.sub(col,fn)}
+function subscribe(key,db,col,fn,opt){if(unsubs[key])unsubs[key]();unsubs[key]=db.sub(col,fn,opt)}
 
 async function enableFirebase(cfg){
   const base='https://www.gstatic.com/firebasejs/10.12.2/';
   const [A,F,AU]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-firestore.js'),import(base+'firebase-auth.js')]);
   const app=A.initializeApp(cfg),fs=cfg.firestoreDatabaseId?F.getFirestore(app,cfg.firestoreDatabaseId):F.getFirestore(app),auth=AU.getAuth(app);
   const cache={},api={mode:'firebase',user:null};
-  api.sub=(c,f)=>F.onSnapshot(F.query(F.collection(fs,c),F.orderBy('updatedAt','desc'),F.limit(60)),s=>{cache[c]=s.docs.map(d=>({...d.data(),id:d.id}));f(cache[c])},e=>console.warn('Firestore',e.code));
+  api.sub=(c,f,o)=>F.onSnapshot(F.query(F.collection(fs,c),F.orderBy((o&&o.order)||'updatedAt',(o&&o.dir)||'desc'),F.limit((o&&o.limit)||60)),s=>{cache[c]=s.docs.map(d=>({...d.data(),id:d.id}));f(cache[c])},e=>console.warn('Firestore',e.code));
   api.put=async(c,doc)=>{try{const {id,...rest}=doc;await F.setDoc(F.doc(fs,c,id),rest);return true}catch(e){console.warn(e);return false}};
   api.del=async(c,id)=>{try{await F.deleteDoc(F.doc(fs,c,id));return true}catch(e){return false}};
   api.get=(c,id)=>(cache[c]||[]).find(d=>d.id===id);
@@ -581,9 +635,31 @@ async function enableFirebase(cfg){
   if(typeof onAuthChange==='function')onAuthChange();
 }
 
+/* optional cloud without Firebase: Google Sheets + Drive through an Apps Script web app (see apps-script/Code.gs) */
+function enableSheets(cfg){
+  const p=prof(),subs=[],cache={};let timer=null;
+  const call=async body=>{const r=await fetch(cfg.url,{method:'POST',body:JSON.stringify({uid:p.id,secret:p.secret,...body})});return r.json()};
+  const api={mode:'sheets',cloud:true,user:{uid:p.id,displayName:''}};
+  const refresh=c=>subs.filter(s=>s.c===c).forEach(s=>s.run());
+  api.sub=(c,f,o)=>{
+    const s={c,f,o,last:'',async run(){try{const r=await call({action:'list',col:c,order:(o&&o.order)||'updatedAt',dir:(o&&o.dir)||'desc',limit:(o&&o.limit)||60});
+      if(r&&r.docs){const j=JSON.stringify(r.docs);if(j!==s.last){s.last=j;cache[c]=r.docs;f(r.docs)}}}catch(e){}}};
+    subs.push(s);s.run();
+    if(!timer)timer=setInterval(()=>{if(document.hidden)return;const act=typeof activeCols==='function'?activeCols():null;subs.filter(x=>!act||act.includes(x.c)).forEach(x=>x.run())},20000);
+    return()=>{const i=subs.indexOf(s);if(i>=0)subs.splice(i,1)};
+  };
+  api.put=async(c,doc)=>{try{const r=await call({action:'put',col:c,doc});if(r&&r.ok){refresh(c);return true}console.warn('Sheets:',r&&r.error)}catch(e){console.warn(e)}return false};
+  api.del=async(c,id)=>{try{const r=await call({action:'del',col:c,id});if(r&&r.ok){refresh(c);return true}}catch(e){}return false};
+  api.inc=async(c,id,f,d)=>{try{const r=await call({action:'inc',col:c,id,field:f,delta:d});if(r&&r.ok){refresh(c);return true}}catch(e){}return false};
+  api.get=(c,id)=>(cache[c]||[]).find(d=>d.id===id);
+  DB=api;
+  if(typeof startShared==='function')startShared();
+  if(typeof onAuthChange==='function')onAuthChange();
+}
+
 /* profile */
 const AVATARS=['🦸','🐱','🦊','🐼','🦄','🐸','🤖','🧑‍🎨'];
-function prof(){let p=LS.get('cc_profile');if(!p){p={id:newId('u'),name:'',avatar:'🦸'};LS.set('cc_profile',p)}return p}
+function prof(){let p=LS.get('cc_profile');if(!p){p={id:newId('u'),name:'',avatar:'🦸'}}if(!p.secret){p.secret=newId('s')+newId('k')+newId('x');LS.set('cc_profile',p)}return p}
 function me(){const p=prof(),u=DB.user;return{id:u?u.uid:p.id,name:p.name||(u&&u.displayName?u.displayName.split(' ')[0]:'')||t('guest'),avatar:p.avatar}}
 
 /* likes */
@@ -725,6 +801,64 @@ function scene(key){
 }
 function sceneImage(key){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(scene(key).replace('<svg ','<svg width="600" height="600" '))})}
 
+/* ===== free comic filters that run on the device (no server, no key, nothing uploaded) ===== */
+function boxBlur(a,w,h){
+  const o=new Uint8ClampedArray(a.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    let r=0,g=0,b=0,n=0;
+    for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;
+      for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const i=(yy*w+xx)*4;r+=a[i];g+=a[i+1];b+=a[i+2];n++}}
+    const j=(y*w+x)*4;o[j]=r/n;o[j+1]=g/n;o[j+2]=b/n;o[j+3]=255;
+  }
+  return o;
+}
+function edgeMap(a,w,h){
+  const L=new Float32Array(w*h);for(let i=0;i<w*h;i++)L[i]=.299*a[i*4]+.587*a[i*4+1]+.114*a[i*4+2];
+  const m=new Float32Array(w*h);let sum=0;
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    const i=y*w+x,gx=-L[i-w-1]-2*L[i-1]-L[i+w-1]+L[i-w+1]+2*L[i+1]+L[i+w+1],gy=-L[i-w-1]-2*L[i-w]-L[i-w+1]+L[i+w-1]+2*L[i+w]+L[i+w+1],v=Math.hypot(gx,gy);
+    m[i]=v;sum+=v;
+  }
+  return{m,mean:sum/(w*h)};
+}
+/* toon: flat posterized colors + bold ink outlines. manga: black and white screentone + outlines. Works in place on ImageData. */
+function toonFilter(d,w,h,manga){
+  const out=d.data,a=boxBlur(out,w,h),{m,mean}=edgeMap(a,w,h),th=Math.max(34,mean*2.2);
+  const q=v=>Math.round(Math.min(255,Math.max(0,v))/255*4)/4*255;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x,j=i*4,r0=a[j],g0=a[j+1],b0=a[j+2],l=.299*r0+.587*g0+.114*b0;
+    if(m[i]>th){out[j]=22;out[j+1]=manga?22:23;out[j+2]=manga?22:42;out[j+3]=255;continue}
+    if(manga){
+      let v;
+      if(l>190)v=255;
+      else if(l>130)v=(x%4<2&&y%4<2)?70:245;
+      else if(l>70)v=((x+y)%2===0)?40:225;
+      else v=25;
+      out[j]=out[j+1]=out[j+2]=v;
+    }else{
+      const k=1.3;let r=l+(r0-l)*k,g=l+(g0-l)*k,b=l+(b0-l)*k;
+      r=q(r);g=q(g);b=q(b);
+      if(r>225&&g>225&&b>225){r=g=b=255}
+      out[j]=r;out[j+1]=g;out[j+2]=b;
+    }
+    out[j+3]=255;
+  }
+  return d;
+}
+
+/* free safety filter for text that other people will read: no contact details, links or rude words */
+const BAD_WORDS=['fuck','fucking','shit','bitch','asshole','bastard','dick','pussy','slut','whore','cunt','nigger','nigga','faggot','retard','porn','nude','naked','sex','sexy','rape','kill yourself'];
+// You can add more words (also Bangla words) to the list above.
+const BAD_RE=new RegExp('(?:^|[^a-z])(?:'+BAD_WORDS.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?:[^a-z]|$)','i');
+function unsafeText(s){
+  s=String(s||'');
+  const n=s.replace(/[০-৯]/g,c=>'০১২৩৪৫৬৭৮৯'.indexOf(c));
+  if(/[\w.+-]+@[\w-]+\.[\w.]+/.test(n)||/(?:https?:\/\/|www\.)\S+/i.test(n)||/\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|info|bd|co)\b/i.test(n)||/(?:\+?\d[\s-]?){8,}/.test(n))return 'unsafe_pii';
+  if(BAD_RE.test(s))return 'unsafe_rude';
+  return null;
+}
+function blocked(...texts){for(const s of texts){const k=unsafeText(s);if(k){toast(t(k));return true}}return false}
+
 /* ===== data ===== */
 const COMICS=[
  {id:'doggo',title:'Doggo Detective: Notebook Case',author:'Saimon Samiu',genre:'Comedy & Mystery',g:'Mystery',cover:'dog1',c:'var(--orange)',rot:-1.4,rating:4.9,count:84,views:1240,likes:210,
@@ -732,13 +866,13 @@ const COMICS=[
   panels:[{sc:'dog1',st:1,b:[['thought','Aha! Footprints leading behind the school desk…',.5,.15]],f:[['SNIFF!','#FF5722',.25,.7]]},
           {sc:'dog2',st:2,b:[['shout','Stop right there, treat thief!',.5,.2]],f:[['POW!!','#FDCB6E',.74,.6]]},
           {sc:'dog3',st:3,b:[['speech','Another notebook mystery closed by Buster!',.5,.22]],f:[['WAG WAG!','#00CEC9',.3,.78]]}]},
- {id:'cyber',title:'Cyber Blade: Neon Sector 7',author:'Nabil Comics',genre:'Cyberpunk Action',g:'Sci-Fi',cover:'assets/banner.jpg',c:'var(--cyan)',rot:1,rating:4.8,count:152,views:3890,likes:540,
-  syn:'In the skyline of Cyber City, a rebel street artist finds a stylus that can turn anything she sketches into electric reality.',
+ {id:'cyber',title:'Cyber Ninja: Neon Blade',author:'Alex Turner',genre:'Cyberpunk / Action',g:'Sci-Fi',cover:'assets/banner.jpg',c:'var(--cyan)',rot:1,rating:4.9,count:152,views:3890,likes:340,
+  syn:'In the neon-soaked streets of Neo-Tokyo, a rogue ninja uncovers a secret cybernetic conspiracy.',
   panels:[{sc:'cy1',st:2,b:[['thought','A stylus? It\'s buzzing in my hand…',.5,.14]],f:[['ZAP!','#FDCB6E',.74,.8]]},
           {sc:'cy2',st:2,b:[['shout','Draw me a shield!',.5,.16]],f:[['WHOOSH!','#00CEC9',.3,.8]]},
           {sc:'cy3',st:1,b:[['speech','Sector 7 just got a lot brighter.',.5,.2]],f:[['SHINE!','#FD79A8',.72,.82]]}]},
- {id:'dragon',title:'The Paper Dragon Chronicles',author:'Lina Art',genre:'Fantasy & Adventure',g:'Fantasy',cover:'dr2',c:'var(--pink)',rot:-.7,rating:4.7,count:63,views:920,likes:175,
-  syn:'A fantasy beast sealed in an artist\'s sketchbook wakes up when a drop of water touches the paper.',
+ {id:'dragon',title:'Dragon Rider Chronicles',author:'Maya Lin',genre:'Fantasy / Adventure',g:'Fantasy',cover:'dr2',c:'var(--pink)',rot:-.7,rating:4.8,count:63,views:920,likes:175,
+  syn:'A fantasy beast sealed in an artist\'s sketchbook wakes up when a drop of water touches the paper, and a young rider must learn to fly with it.',
   panels:[{sc:'dr1',st:3,b:[['thought','Did the sketchbook just… move?',.5,.14]],f:[['DRIP!','#00CEC9',.74,.82]]},
           {sc:'dr2',st:1,b:[['shout','ROOOAR!',.5,.15]],f:[['WHOOM!','#FF5722',.26,.82]]},
           {sc:'dr3',st:1,b:[['speech','Come on, little dragon, let\'s fly!',.5,.2]],f:[['WHEEE!','#FDCB6E',.7,.5]]}]},
@@ -770,7 +904,7 @@ const SEED_POSTS=[
 
 const PAL=['#16172A','#FF5722','#6C5CE7','#00CEC9','#FDCB6E','#FD79A8','#2ECC71','#8D5A3B','#FFFFFF'];
 const STK={c_pow:['⭐','⚡','🔥','💥','✨','🌪️','💫','☄️'],c_ani:['🐱','🐶','🐰','🦊','🐼','🦄','🦁','🐸'],c_gear:['👑','🕶️','🛡️','⚔️','🚀','🏆','🎩','🥊'],c_fun:['😎','🤩','😜','🦸','❤️','🎨','🍕','🎉']};
-const SFX=['POW!','BAM!','WOW!','ZAP!','WHOOSH!','BOOM!'],SFXC=['#FF5722','#FDCB6E','#00CEC9','#FD79A8'];
+const SFX=['BOOM!','POW!','ZAP!','SWOOSH!','BAM!','WOW!'],SFXC=['#FF5722','#FDCB6E','#00CEC9','#FD79A8'];
 const LAYOUTS=[
  {id:'single',n:1,cols:1,h:[600],mw:580,c:'var(--orange)',key:'single',labels:['Main Scene']},
  {id:'strip3',n:3,cols:1,h:[430,430,430],mw:520,c:'var(--cyan)',key:'strip',labels:['Panel 1: Setup','Panel 2: Conflict','Panel 3: Punchline']},
@@ -885,7 +1019,7 @@ $('#clr').onclick=async()=>{if(!(await ask({title:t('q_clear'),confirm:true})))r
 /* photo / camera -> comic ink */
 function loadPhoto(f){
   if(!f)return;const u=URL.createObjectURL(f),im=new Image();
-  im.onload=()=>{const p=P();snap(p);coverDraw(p,im);URL.revokeObjectURL(u);refresh();toast(t('toast_photo'))};im.src=u;
+  im.onload=()=>{const p=P();snap(p);coverDraw(p,im);saveSketch(im);URL.revokeObjectURL(u);refresh();toast(t('toast_photo'))};im.src=u;
 }
 function coverDraw(p,im){const k=Math.max(p.W/im.width,p.H/im.height),w=im.width*k,h=im.height*k;p.dctx.fillStyle='#fff';p.dctx.fillRect(0,0,p.W,p.H);p.dctx.drawImage(im,(p.W-w)/2,(p.H-h)/2,w,h)}
 $('#photo').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value=''};
@@ -956,7 +1090,7 @@ $('#saveProj').onclick=()=>{
   const rec={id:st.cur||newId('c'),title:$('#title').value.trim()||t('untitled'),layout:st.lay.id,style:st.style,motion:st.motion,ts:Date.now(),thumb:thumb(420),
     panels:st.panels.map(p=>({img:p.dr.toDataURL('image/jpeg',.82),items:JSON.parse(ser(p.items))}))};
   const i=list.findIndex(r=>r.id===rec.id);if(i>=0)list[i]=rec;else list.unshift(rec);
-  if(LS.set('cc_projects',list)){st.cur=rec.id;toast(t('toast_saved'))}else toast(t('toast_full'));
+  if(LS.set('cc_projects',list)){st.cur=rec.id;toast(t('toast_saved'));if(typeof cloudProject==='function')cloudProject(rec,true)}else toast(t('toast_full'));
 };
 function openProject(id){
   const r=LS.get('cc_projects',[]).find(x=>x.id===id);if(!r)return;
@@ -964,48 +1098,54 @@ function openProject(id){
   r.panels.forEach((d,i)=>{const p=st.panels[i];if(!p)return;p.items=d.items;const im=new Image();im.onload=()=>{p.dctx.drawImage(im,0,0,p.W,p.H);renderFx(p)};im.src=d.img;renderFx(p)});
   refresh();
 }
-async function deleteProject(id,after){if(await ask({title:t('q_del'),confirm:true})){LS.set('cc_projects',LS.get('cc_projects',[]).filter(r=>r.id!==id));if(after)after()}}
+async function deleteProject(id,after){if(await ask({title:t('q_del'),confirm:true})){LS.set('cc_projects',LS.get('cc_projects',[]).filter(r=>r.id!==id));if(typeof cloudProject==='function')cloudProject({id},false);if(after)after()}}
 async function postFromStudio(){
   if(!st.lay||!dirty()){toast(t('toast_draw_first'));location.hash='#studio';return}
   if(DB.mode==='firebase'&&!DB.user){toast(t('toast_signin'));location.hash='#profile';return}
   const r=await ask({title:t('post_h'),fields:[{ph:t('post_title'),value:$('#title').value,max:60},{ph:t('post_desc'),area:true,max:240}]});
-  if(!r||!r[0])return;const m=me();
+  if(!r||!r[0])return;if(blocked(r[0],r[1]))return;const m=me();
   const doc={id:newId('p'),authorId:m.id,authorName:m.name,title:r[0],description:r[1]||'',imageUrl:thumb(700),characterDesign:t('lay_'+st.lay.key+'_t')+' · '+t(STYLES[st.style]),likesCount:0,remixCount:0,createdAt:iso(),updatedAt:iso()};
   const ok=await DB.put('feed',doc);toast(ok?t('toast_posted'):t('toast_post_fail'));if(ok)location.hash='#community';
 }
 $('#postIt').onclick=postFromStudio;$('#postFeed').onclick=postFromStudio;
 
 /* remix: start a new single panel from an existing picture */
-async function remixInto(srcOrScene){
+async function remixInto(srcOrScene,msg){
   openLayout('single');
-  try{const im=srcOrScene.startsWith('scene:')?await sceneImage(srcOrScene.slice(6)):await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=srcOrScene});
-    const p=P();snap(p);coverDraw(p,im);refresh();toast(t('toast_remix'))}catch(e){toast(t('toast_remix_fail'))}
+  try{const im=srcOrScene.startsWith('scene:')?await sceneImage(srcOrScene.slice(6)):await new Promise((ok,no)=>{const i=new Image();if(/^https?:/.test(srcOrScene))i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=no;i.src=srcOrScene});
+    const p=P();snap(p);coverDraw(p,im);refresh();toast(t(msg||'toast_remix'))}catch(e){toast(t('toast_remix_fail'))}
 }
 
 /* tour */
 $('#tour').hidden=!!LS.get('cc_tour',0);$('#tourX').onclick=()=>{LS.set('cc_tour',1);$('#tour').hidden=true};
 
-/* publish as a comic everyone can read (collection "comics"); extra pages are added to your own comic */
+/* publish as a comic everyone can read: comic info in "comics", every page in its own document "comics/{id}/pages" */
 function pageImage(){for(const w of [800,640,480]){const u=thumb(w);if(u.length<=150000)return u}return null}
 async function publishComic(){
   if(!st.lay||!dirty()){toast(t('toast_draw_first'));return}
   if(needSignIn()){toast(t('toast_signin'));location.hash='#profile';return}
   const m=me(),mine=UCOMICS.filter(c=>c.authorId===m.id);
   const gen=['Fantasy','Mystery','Sci-Fi','Comedy','Cozy','Sports','Adventure','Slice of Life'].map(g=>({v:g,l:g}));
-  const r=await ask({title:t('pub_h'),text:t('pub_note'),fields:[{select:[{v:'',l:t('pub_new')},...mine.map(c=>({v:c.id,l:'+ '+c.title}))],value:''},{ph:t('pub_title'),value:$('#title').value,max:60},{ph:t('pub_syn'),area:true,max:240},{select:gen,value:'Fantasy'}]});
-  if(!r)return;
+  const r=await ask({title:t('pub_h'),text:t('pub_note'),fields:[
+    {select:[{v:'',l:t('pub_new')},...mine.map(c=>({v:c.id,l:'+ '+c.title}))],value:''},
+    {select:[{v:'same',l:t('pub_same')},{v:'new',l:t('pub_newch')}],value:'same'},
+    {ph:t('pub_title'),value:$('#title').value,max:60},{ph:t('pub_syn'),area:true,max:240},{select:gen,value:'Fantasy'}]});
+  if(!r)return;if(blocked(r[2],r[3]))return;
   const img=pageImage();if(!img){toast(t('pub_big'));return}
-  const target=r[0]?UCOMICS.find(c=>c.id===r[0]):null,now=iso();
+  const fail=()=>toast(t(DB.mode==='local'?'toast_full':'toast_post_fail')),now=iso();
+  const target=r[0]?UCOMICS.find(c=>c.id===r[0]):null;
   if(target){
-    let pages=[];try{pages=JSON.parse(target.pagesJson)}catch(e){}
-    if(pages.length>=6){toast(t('pub_max'));return}
-    pages.push(img);
-    if(await DB.put('comics',{...target,pagesJson:JSON.stringify(pages),chapterCount:pages.length,updatedAt:now})){toast(t('toast_pub_add'));location.hash='#read/'+target.id}else toast(t('toast_post_fail'));
+    const n=target.pageCount||target.chapterCount||0;if(n>=100){toast(t('pub_max'));return}
+    const chap=(target.chapterCount||1)+(r[1]==='new'?1:0);
+    if(!(await DB.put('comics/'+target.id+'/pages',{id:pid(n),index:n,chapter:chap,img,authorId:m.id,updatedAt:now}))){fail();return}
+    if(await DB.put('comics',{...target,pageCount:n+1,chapterCount:chap,updatedAt:now})){toast(t('toast_pub_add'));location.hash='#read/'+target.id}else fail();
     return;
   }
-  if(!r[1]){toast(t('pub_need_title'));return}
-  const doc={id:newId('c'),title:r[1],synopsis:r[2]||'',authorId:m.id,authorName:m.name,genre:r[3],coverUrl:thumb(360),ratingAverage:0,ratingCount:0,viewCount:0,likesCount:0,chapterCount:1,isPublished:true,hidden:false,pagesJson:JSON.stringify([img]),createdAt:now,updatedAt:now};
-  if(await DB.put('comics',doc)){toast(t('toast_pub'));location.hash='#read/'+doc.id}else toast(t('toast_post_fail'));
+  if(!r[2]){toast(t('pub_need_title'));return}
+  const id=newId('c'),doc={id,title:r[2],synopsis:r[3]||'',authorId:m.id,authorName:m.name,genre:r[4],coverUrl:thumb(360),ratingAverage:0,ratingCount:0,viewCount:0,likesCount:0,chapterCount:1,pageCount:1,isPublished:true,hidden:false,createdAt:now,updatedAt:now};
+  if(!(await DB.put('comics',doc))){fail();return}
+  if(await DB.put('comics/'+id+'/pages',{id:pid(0),index:0,chapter:1,img,authorId:m.id,updatedAt:now})){toast(t('toast_pub'));location.hash='#read/'+id}
+  else{await DB.del('comics',id);fail()}
 }
 $('#publish').onclick=publishComic;
 
@@ -1029,6 +1169,71 @@ $('#aiGo').onclick=async()=>{
   finally{btn.disabled=false;btn.innerHTML=old}
 };
 
+/* scanned sketch gallery (like the app's local sketch database) */
+function saveSketch(src,name){
+  try{
+    const c=document.createElement('canvas'),k=Math.min(1,800/Math.max(src.width,src.height));c.width=Math.round(src.width*k);c.height=Math.round(src.height*k);c.getContext('2d').drawImage(src,0,0,c.width,c.height);
+    const list=LS.get('cc_sketches',[]);list.unshift({id:newId('s'),name:name||t('sk_name')+' '+(list.length+1),img:c.toDataURL('image/jpeg',.8),ts:Date.now()});
+    while(list.length>24)list.pop();
+    while(!LS.set('cc_sketches',list)&&list.length>1)list.pop();
+  }catch(e){}
+}
+
+/* live camera scanner: framing guide, torch, front/back, shutter, AI Lineart Boost, retake */
+let camStream=null,camFacing='environment',camRaw=null,camTorch=false;
+function camStop(){if(camStream){camStream.getTracks().forEach(tr=>tr.stop());camStream=null}}
+function camUI(mode){$('#camLive').hidden=mode!=='live';$('#camReview').hidden=mode!=='review';$('#camDenied').hidden=mode!=='denied';
+  $('#camV').hidden=mode==='review';$('#camP').hidden=mode!=='review';$('#camG').hidden=mode==='review'||mode==='denied';
+  const m=$('#camMsg');m.hidden=mode!=='denied';if(mode==='denied')m.textContent=t('cam_denied')}
+async function camStart(){
+  camStop();camTorch=false;
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:camFacing,width:{ideal:1600}},audio:false});
+    const v=$('#camV');v.srcObject=camStream;try{await v.play()}catch(e){}
+    const tr=camStream.getVideoTracks()[0],caps=tr&&tr.getCapabilities?tr.getCapabilities():{};
+    $('#camTorch').hidden=!caps.torch;camUI('live');$('#camShot').focus();
+  }catch(e){camUI('denied')}
+}
+function openCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(!st.lay)openLayout('single');$('#snap').click();return}
+  if(!st.lay)openLayout('single');
+  $('#cam').hidden=false;camStart();
+}
+function closeCam(){camStop();$('#cam').hidden=true}
+function boostLines(src){
+  const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),a=d.data;
+  for(let i=0;i<a.length;i+=4){let g=(.299*a[i]+.587*a[i+1]+.114*a[i+2])/255;g=Math.min(1,Math.max(0,(g-.3)/.55));g=g<.5?2*g*g:1-2*(1-g)*(1-g);if(g>.82)g=1;const v=g*255;a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
+  x.putImageData(d,0,0);return c;
+}
+function camShow(){const out=$('#camBoost').checked?boostLines(camRaw):camRaw,p=$('#camP');p.width=out.width;p.height=out.height;p.getContext('2d').drawImage(out,0,0)}
+$('#camShot').onclick=()=>{
+  const v=$('#camV'),w=v.videoWidth||640,h=v.videoHeight||480,c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);
+  camRaw=c;camStop();camUI('review');camShow();
+};
+$('#camBoost').onchange=camShow;
+$('#camRetake').onclick=camStart;
+$('#camUse').onclick=()=>{
+  const out=$('#camBoost').checked?boostLines(camRaw):camRaw,p=P();
+  if(p){snap(p);coverDraw(p,out);refresh()}
+  saveSketch(out);closeCam();toast(t('toast_photo'));
+};
+$('#camX').onclick=closeCam;
+$('#camFlip').onclick=()=>{camFacing=camFacing==='environment'?'user':'environment';camStart()};
+$('#camTorch').onclick=()=>{camTorch=!camTorch;const tr=camStream&&camStream.getVideoTracks()[0];if(tr&&tr.applyConstraints)tr.applyConstraints({advanced:[{torch:camTorch}]}).catch(()=>{})};
+$('#camPick').onclick=()=>{closeCam();$('#photo').click()};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#cam').hidden)closeCam()});
+$('#snapBtn').onclick=openCam;
+$('#snapCard').onclick=openCam;
+
+/* free on-device comic filters */
+function applyFx(manga){
+  const p=P();if(!p)return;snap(p);
+  const d=p.dctx.getImageData(0,0,p.W,p.H);toonFilter(d,p.W,p.H,manga);p.dctx.putImageData(d,0,0);refresh();
+}
+$('#fxToon').onclick=()=>applyFx(false);
+$('#fxManga').onclick=()=>applyFx(true);
+
 /* ===== pages ===== */
 const needSignIn=()=>DB.mode==='firebase'&&!DB.user;
 const bmAll=()=>LS.get('cc_bm',{});
@@ -1037,18 +1242,20 @@ const visible=l=>l.filter(x=>!x.hidden&&x.isPublished!==false);
 
 /* ---- comics published by everyone (collection "comics") ---- */
 let UCOMICS=[],uLoaded=false,readerSeen=null,curComic=null;
+const pid=i=>'p'+String(i).padStart(3,'0');
+const rkey=d=>d.id+':'+(d.likesCount||0)+':'+(d.pageCount||d.chapterCount||0)+':'+(d.chapterCount||1);
 function normUser(d,full){
-  let pages=[];if(full){try{pages=JSON.parse(d.pagesJson)}catch(e){}}
-  return{id:d.id,title:d.title,author:d.authorName,authorId:d.authorId,genre:d.genre||'Comic',g:d.genre||'Comic',coverUrl:d.coverUrl,c:COLS[hue(d.id)%4],rot:((hue(d.id)%5)-2)*.5,likes:d.likesCount||0,views:d.viewCount||0,syn:d.synopsis||'',pageCount:d.chapterCount||0,pages,user:true};
+  let pages=[];if(full&&d.pagesJson){try{pages=JSON.parse(d.pagesJson).map(img=>({chapter:1,img}))}catch(e){}}
+  return{key:rkey(d),chapters:d.chapterCount||1,id:d.id,title:d.title,author:d.authorName,authorId:d.authorId,genre:d.genre||'Comic',g:d.genre||'Comic',coverUrl:d.coverUrl,c:COLS[hue(d.id)%4],rot:((hue(d.id)%5)-2)*.5,likes:d.likesCount||0,views:d.viewCount||0,syn:d.synopsis||'',pageCount:d.pageCount||(d.pagesJson?d.chapterCount:0)||0,pages,pending:!!d.pending,user:true};
 }
 const findComic=(id,full)=>COMICS.find(c=>c.id===id)||(UCOMICS.find(c=>c.id===id)?normUser(UCOMICS.find(c=>c.id===id),full):null);
 function startShared(){
   subscribe('ucomics',DB,'comics',list=>{
-    UCOMICS=visible(list).filter(x=>x.pagesJson);uLoaded=true;
+    UCOMICS=visible(list).filter(x=>(x.pageCount||0)>0||x.pagesJson);uLoaded=true;
     if(route==='home')renderHome();
     else if(route==='read'&&curComic&&!COMICS.find(c=>c.id===curComic)){
       const u=UCOMICS.find(c=>c.id===curComic);
-      if(!u||readerSeen!==u.id+':'+(u.likesCount||0)+':'+(u.chapterCount||0))renderReader(curComic,true);
+      if(!u||readerSeen!==rkey(u))renderReader(curComic,true);
     }else if(route==='profile')paintProfile();
   });
 }
@@ -1059,20 +1266,21 @@ async function report(kind,targetId){
   if(!r)return;
   if(needSignIn()){toast(t('toast_signin'));return}
   const m=me(),doc={id:newId('r'),kind,targetId,reason:r[0],reporterId:m.id,createdAt:iso(),updatedAt:iso()};
-  await (DB.mode==='firebase'?DB:LOCAL).put('reports',doc);toast(t('toast_reported'));
+  await (DB.mode==='local'?LOCAL:DB).put('reports',doc);toast(t('toast_reported'));
 }
 
 /* ---- home / explore ---- */
 let hq='',hg='All';
 function card(c,prog){
   const lk=liked('c:'+c.id),likes=c.user?c.likes:c.likes+(lk?1:0);
-  return `<button class="cc" data-id="${esc(c.id)}" style="--c:${c.c};--rot:${c.rot}deg"><div class="cv">${c.user?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}<span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${t('by')} ${esc(c.author)}</span><span>${c.user?'🆕':'⭐ '+c.rating}</span></div><div class="meta"><span>${c.user?(c.pageCount||1)+' '+t('pages'):c.panels.length+' '+t('chap')}</span><span>❤ ${likes}</span></div>${prog!=null?`<div class="bar"><i style="width:${Math.round(prog*100)}%"></i></div>`:''}</div></button>`;
+  return `<button class="cc" data-id="${esc(c.id)}" style="--c:${c.c};--rot:${c.rot}deg"><div class="cv">${c.user?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}<span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${t('by')} ${esc(c.author)}</span><span>${c.user?(c.pending?'⏳':'🆕'):'⭐ '+c.rating}</span></div><div class="meta"><span>${c.user?(c.pageCount||1)+' '+t('pages'):c.panels.length+' '+t('chap')}</span><span>❤ ${likes}</span></div>${prog!=null?`<div class="bar"><i style="width:${Math.round(prog*100)}%"></i></div>`:''}</div></button>`;
 }
-function bindCards(root){$$('.cc[data-id]',root).forEach(b=>b.onclick=()=>location.hash='#read/'+b.dataset.id)}
+function bindCards(root){$$('.cc[data-id],.lr[data-id]',root).forEach(b=>b.onclick=()=>location.hash='#read/'+b.dataset.id)}
+function rowC(c){const lk=liked('c:'+c.id),likes=c.user?c.likes:c.likes+(lk?1:0);return `<button class="lr" data-id="${esc(c.id)}"><div class="th">${c.user?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}</div><div><h3>${esc(c.title)}</h3><p>${esc(c.syn)}</p><span class="m">${c.user?(c.pageCount||1)+' '+t('pages'):c.panels.length+' '+t('chap')} · ❤ ${likes}</span></div></button>`}
 const matches=c=>{const q=hq.toLowerCase();return(hg==='All'||c.g===hg)&&(!q||(c.title+' '+c.author+' '+c.genre).toLowerCase().includes(q))};
 function renderHomeList(){
   const list=COMICS.filter(matches);
-  $('#library').innerHTML=list.length?list.map(c=>card(c)).join(''):`<div class="empty"><div class="big">🔍</div><p>${t('no_match')}</p></div>`;
+  $('#library').innerHTML=list.length?list.map(rowC).join(''):`<div class="empty"><div class="big">🔍</div><p>${t('no_match')}</p></div>`;
   const ul=UCOMICS.map(d=>normUser(d)).filter(matches);
   $('#ucSec').hidden=!UCOMICS.length;
   $('#ucList').innerHTML=ul.length?ul.map(c=>card(c)).join(''):`<div class="empty"><div class="big">🔍</div><p>${t('no_match')}</p></div>`;
@@ -1083,13 +1291,15 @@ function renderHome(){
   $('#genres').innerHTML=gs.map(g=>`<button class="chip${g===hg?' on':''}" data-g="${esc(g)}">${g==='All'?t('all'):esc(g)}</button>`).join('');
   $$('#genres .chip').forEach(b=>b.onclick=()=>{hg=b.dataset.g;renderHome()});
   renderHomeList();
+  $('#feat').innerHTML=[...COMICS].sort((a,b)=>b.rating-a.rating).slice(0,4).map(c=>card(c)).join('');bindCards($('#feat'));
   const items=Object.entries(bmAll()).filter(([id,v])=>v.p>.02&&v.p<.98&&findComic(id));
   $('#cont').hidden=!items.length;
   $('#contList').innerHTML=items.map(([id,v])=>card(findComic(id),v.p)).join('');bindCards($('#contList'));
 }
 $('#q').oninput=e=>{hq=e.target.value;renderHomeList()};
 $('#ctaRead').onclick=e=>{e.preventDefault();if(location.hash!=='#home'&&location.hash!=='')location.hash='#home';setTimeout(()=>$('#comics').scrollIntoView({behavior:reduce?'auto':'smooth'}),40)};
-$('#promoSnap').onclick=()=>{openLayout('single');$$('.view').forEach(v=>v.hidden=v.id!=='v-studio');$('#snap').click()};
+$('#promoSnap').onclick=openCam;
+$('#promoNew').onclick=()=>{location.hash='#studio'};
 
 /* ---- reader ---- */
 const myRating=id=>(LS.get('cc_rate',{}))[id]||0;
@@ -1098,35 +1308,38 @@ function renderReader(id,keep){
   curComic=id;const c=findComic(id,true);
   if(!c){$('#reader').innerHTML=`<div class="back"><a class="btn sm ghost" href="#home">← ${t('back')}</a></div><div class="empty"><div class="big">${uLoaded?'🔎':'⏳'}</div><p>${t(uLoaded?'nf':'loading')}</p></div>`;readerSeen=null;return}
   const mine=myRating(id),lk=liked('c:'+id),bm=bmAll()[id],U=!!c.user;
-  readerSeen=U?c.id+':'+c.likes+':'+c.pageCount:null;
+  readerSeen=U?c.key:null;
   const avg=mine?((c.rating*c.count+mine)/(c.count+1)).toFixed(1):U?'':c.rating.toFixed(1);
   const likes=U?c.likes:c.likes+(lk?1:0),m=me();
   $('#reader').innerHTML=`<div class="back"><a class="btn sm ghost" href="#home">← ${t('back')}</a></div>
-  <div class="rhead"><div class="cv">${U?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}</div><div><h2>${esc(c.title)}</h2><span class="pill">${esc(c.genre)}</span><span class="pill">${t('by')} ${esc(c.author)}</span><span class="pill">👁 ${c.views.toLocaleString()}</span><span class="pill">🖼 ${U?(c.pages.length||1)+' '+t('pages'):c.panels.length+' '+t('chap')}</span>
+  <div class="rhead"><div class="cv">${U?`<img alt="" src="${esc(c.coverUrl||'')}">`:cover(c)}</div><div><h2>${esc(c.title)}</h2><span class="pill">${esc(c.genre)}</span><span class="pill">${t('by')} ${esc(c.author)}</span><span class="pill">👁 ${c.views.toLocaleString()}</span><span class="pill">🖼 ${U?(c.pageCount||1)+' '+t('pages')+' · '+c.chapters+' '+t('chapters'):c.panels.length+' '+t('chap')}</span>
   <p style="max-width:34em">${esc(c.syn)}</p>
+  ${U&&c.pending?`<p class="note">⏳ ${t('pending')}</p>`:''}
   ${U?'':`<div class="stars" role="group" aria-label="${t('rate_h')}">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${n<=mine?'on':''}" aria-label="${n}">⭐</button>`).join('')}</div><p class="muted">⭐ ${avg} · ${t('rate_h')}</p>`}
   <div class="rowf" style="margin-top:12px"><button class="btn sm ${lk?'pk':'ghost'}" id="rLike">❤ ${likes}</button><button class="btn sm ${bm?'cy':'ghost'}" id="rBm">🔖 ${bm?t('bookmarked'):t('bookmark')}</button>${U&&c.authorId!==m.id?`<button class="btn sm ghost rep" id="rRep" aria-label="${t('report')}">🚩</button>`:''}</div></div></div>
-  <div class="strip${U?' wide':''}" id="strip">${U?c.pages.map(src=>`<div class="rp pg"><img alt="" src="${esc(src)}"></div>`).join(''):c.panels.map((p,i)=>`<div class="rp" data-s="${p.st}" style="--rr:${i%2?.6:-.6}deg">${scene(p.sc)}<canvas class="rfx" width="${S}" height="${S}"></canvas></div>`).join('')}</div>
+  <div class="strip${U?' wide':''}" id="strip">${U?(c.pages.length?userPagesHTML(c.pages):`<p class="muted" style="text-align:center">${t('loading')}</p>`):c.panels.map((p,i)=>`<div class="rp" data-s="${p.st}" style="--rr:${i%2?.6:-.6}deg">${scene(p.sc)}<canvas class="rfx" width="${S}" height="${S}"></canvas></div>`).join('')}</div>
   <div class="endcard"><h3>${t('end_ch')}</h3><p>${t('end_p')}</p><p style="margin-top:14px"><a class="btn pri" href="#studio">🎨 ${t('make_own')}</a></p></div>
   <div class="cmts"><h2>${t('cmt_h')}</h2><div class="rowf"><input class="field" id="cIn" maxlength="200" placeholder="${t('cmt_ph')}" aria-label="${t('cmt_h')}" style="flex:1 1 220px"><button class="btn sm" id="cGo">${t('cmt_go')}</button></div><div id="cList"></div></div>`;
   if(!U)$$('#reader .rfx').forEach((cv,i)=>{const p=c.panels[i];cv._items=[...p.b.map(([ty,tx,x,y])=>({t:ty,text:tx,x,y,s:1,r:0})),...p.f.map(([tx,col,x,y])=>({t:'sfx',text:tx,c:col,x,y,s:1,r:i%2?3:-3}))]});
   paintReader();
+  if(U&&!c.pages.length)subscribe('upages',DB,'comics/'+id+'/pages',list=>{const box=$('#strip');if(!box||curComic!==id)return;if(list.length)box.innerHTML=userPagesHTML(list)},{order:'index',dir:'asc',limit:200});
   $$('#reader .stars button').forEach(b=>b.onclick=()=>{const r=LS.get('cc_rate',{});r[id]=+b.dataset.n;LS.set('cc_rate',r);renderReader(id,true)});
   $('#rLike').onclick=async()=>{
     if(U&&needSignIn()){toast(t('toast_signin'));return}
     const was=liked('c:'+id);toggleLike('c:'+id);
     if(U){await DB.inc('comics',id,'likesCount',was?-1:1);renderReader(id,true)}else renderReader(id,true)};
-  $('#rBm').onclick=()=>{const b=bmAll();if(b[id])delete b[id];else b[id]={p:progressNow(),ts:Date.now()};LS.set('cc_bm',b);toast(b[id]?t('toast_bm'):t('toast_unbm'));renderReader(id,true)};
+  $('#rBm').onclick=()=>{const b=bmAll();if(b[id])delete b[id];else b[id]={p:progressNow(),ts:Date.now()};LS.set('cc_bm',b);cloudBm(id,!!b[id]);toast(b[id]?t('toast_bm'):t('toast_unbm'));renderReader(id,true)};
   const rr=$('#rRep');if(rr)rr.onclick=()=>report('comic',id);
   if(U&&!sessionStorage['v_'+id]&&(DB.mode==='local'||DB.user)){sessionStorage['v_'+id]=1;DB.inc('comics',id,'viewCount',1)}
   const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
   $$('#reader .rp').forEach(e=>io.observe(e));
-  const send=()=>{const v=$('#cIn').value.trim();if(!v)return;LOCAL.put('comments',{id:newId('m'),comicId:id,userId:m.id,userName:m.name,userAvatar:m.avatar,content:v,createdAt:iso()});$('#cIn').value=''};
+  const send=()=>{const v=$('#cIn').value.trim();if(!v||blocked(v))return;LOCAL.put('comments',{id:newId('m'),comicId:id,userId:m.id,userName:m.name,userAvatar:m.avatar,content:v,createdAt:iso()});$('#cIn').value=''};
   $('#cGo').onclick=send;$('#cIn').onkeydown=e=>{if(e.key==='Enter')send()};
   subscribe('cmts',LOCAL,'comments',list=>{const box=$('#cList');if(!box||curComic!==id)return;
     box.innerHTML=[...list.filter(x=>x.comicId===id),...SEED_CMTS].map(x=>`<div class="cmt"><div class="av">${esc(x.userAvatar)}</div><div><b>${esc(x.userName)}</b>${esc(x.content)}</div></div>`).join('')});
   if(!keep)window.scrollTo(0,0);
 }
+function userPagesHTML(pages){let last=0,h='';pages.forEach(p=>{if(p.chapter!==last){last=p.chapter;h+=`<h3 class="chh">${t('chapter')} ${p.chapter}</h3>`}h+=`<div class="rp pg in"><img alt="" src="${esc(p.img)}"></div>`});return h}
 function paintReader(){$$('#reader .rfx').forEach(cv=>{const x=cv.getContext('2d');x.clearRect(0,0,S,S);(cv._items||[]).forEach(it=>drawItem(x,it,S,S,false,true))})}
 function progressNow(){const s=$('#strip');if(!s)return 0;const r=s.getBoundingClientRect(),v=(innerHeight-r.top)/r.height;return Math.max(0,Math.min(1,v))}
 let scrollQ=false;
@@ -1140,7 +1353,7 @@ addEventListener('scroll',()=>{
 let FEED=[];
 const remixN=id=>(LS.get('cc_remix',{}))[id]||0;
 function renderFeed(){
-  $('#comNote').textContent=DB.mode==='firebase'?t('com_note_cloud'):t('com_note_local');
+  $('#comNote').textContent=DB.mode==='local'?t('com_note_local'):t(DB.mode==='sheets'?'com_note_sheets':'com_note_cloud');
   subscribe('feed',DB,'feed',list=>{FEED=list;if(route==='community')paintFeed()});paintFeed();
 }
 function paintFeed(){
@@ -1150,7 +1363,7 @@ function paintFeed(){
     const likes=p.real?(p.likesCount||0):(p.likesCount||0)+(lk?1:0),rm=p.real?(p.remixCount||0):(p.remixCount||0)+remixN(p.id);
     return `<article class="post" style="--c:${COLS[i%4]}"><div class="ph"><span class="ava" style="background:hsl(${hue(p.authorName)} 80% 72%)">${esc((p.authorName||'?')[0])}</span><b>${esc(p.authorName)}</b></div>
     <div class="fi">${p.scene?scene(p.scene):`<img alt="" src="${esc(src)}">`}</div>
-    <div class="pb"><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>${p.characterDesign?`<p class="design">🎨 ${esc(p.characterDesign)}</p>`:''}
+    <div class="pb"><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>${p.pending?`<p class="design">⏳ ${t('pending')}</p>`:''}${p.characterDesign?`<p class="design">🎨 ${esc(p.characterDesign)}</p>`:''}
     <div class="pa"><button class="btn sm ${lk?'pk':'ghost'}" data-act="like" data-real="${p.real?1:0}" data-id="${esc(p.id)}">❤ ${likes}</button><button class="btn sm cy" data-act="remix" data-real="${p.real?1:0}" data-id="${esc(p.id)}" data-src="${esc(src)}">🔁 ${t('remix')} · ${rm}</button>${mineP?`<button class="btn sm ghost" data-act="del" data-id="${esc(p.id)}" aria-label="${t('del')}">🗑️</button>`:(p.real?`<button class="btn sm ghost rep" data-act="report" data-id="${esc(p.id)}" aria-label="${t('report')}">🚩</button>`:'')}</div></div></article>`}).join('');
 }
 $('#feed').addEventListener('click',async e=>{
@@ -1183,7 +1396,7 @@ function paintCollab(){
 }
 async function newCollab(){
   if(needSignIn()){toast(t('toast_signin'));location.hash='#profile';return}
-  const r=await ask({title:t('nc_h'),fields:[{ph:t('nc_title'),max:60},{ph:t('nc_script'),area:true,max:2000}]});if(!r||!r[0])return;
+  const r=await ask({title:t('nc_h'),fields:[{ph:t('nc_title'),max:60},{ph:t('nc_script'),area:true,max:2000}]});if(!r||!r[0])return;if(blocked(r[0],r[1]))return;
   const m=me(),doc={id:newId('k'),title:r[0],ownerId:m.id,ownerName:m.name,collaboratorIds:m.id,members:{[m.id]:m.name},status:'active',currentPanelScript:r[1]||'',updatedAt:iso()};
   if(await DB.put('collaborations',doc))location.hash='#collab/'+doc.id;else toast(t('toast_post_fail'));
 }
@@ -1199,9 +1412,9 @@ function paintRoom(r){
   <label for="script" class="muted">${t('col_script')}</label>
   <textarea class="field script" id="script" maxlength="4000">${esc(r.currentPanelScript)}</textarea>
   <div class="rowf" style="margin-top:14px"><button class="btn cy" id="cpLink">🔗 ${t('col_link')}</button><a class="btn pk" href="#studio">🎨 ${t('col_draw')}</a>${owner?`<button class="btn ghost" id="cStat">${t(r.status==='completed'?'col_reopen':'col_finish')}</button>`:''}<span class="muted" id="saved"></span></div>
-  <p class="note">${DB.mode==='firebase'?t('col_note_cloud'):t('col_note_local')}</p>`;
+  <p class="note">${DB.mode==='local'?t('col_note_local'):t(DB.mode==='sheets'?'col_note_sheets':'col_note_cloud')}</p>`;
   const ta=$('#script');
-  ta.oninput=()=>{clearTimeout(saveT);saveT=setTimeout(async()=>{r.currentPanelScript=ta.value;r.updatedAt=iso();if(await DB.put('collaborations',r)){const s=$('#saved');if(s)s.textContent='✓ '+t('saved_ok')}},700)};
+  ta.oninput=()=>{clearTimeout(saveT);saveT=setTimeout(async()=>{if(blocked(ta.value))return;r.currentPanelScript=ta.value;r.updatedAt=iso();if(await DB.put('collaborations',r)){const s=$('#saved');if(s)s.textContent='✓ '+t('saved_ok')}},700)};
   $('#cpLink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);toast(t('toast_copied'))}catch(e){toast(location.href)}};
   const cs=$('#cStat');if(cs)cs.onclick=async()=>{r.status=r.status==='completed'?'active':'completed';r.updatedAt=iso();await DB.put('collaborations',r);paintRoom(r)};
 }
@@ -1216,28 +1429,67 @@ function paintProfile(){
   const empty=(e,k,cta)=>`<div class="empty"><div class="big">${e}</div><p>${t(k)}</p>${cta?`<p style="margin-top:14px"><a class="btn pri" href="#studio">🎨 ${t('cta_draw')}</a></p>`:''}</div>`;
   let list='';
   if(ptab==='mine')list=projects.length?projects.map((r,i)=>`<div class="cc" style="--c:${COLS[i%3]};cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${r.thumb}"></div><div class="in"><h3>${esc(r.title)}</h3><div class="sh-act"><button class="btn sm cy" data-o="${r.id}">${t('open')}</button><button class="btn sm ghost" data-d="${r.id}">🗑️ ${t('del')}</button></div></div></div>`).join(''):empty('🗂️','shelf_empty',true);
-  else if(ptab==='pub')list=pubs.length?pubs.map((d,i)=>{const c=normUser(d);return `<div class="cc" data-id="${esc(c.id)}" style="--c:${c.c};cursor:pointer"><div class="cv"><img alt="" src="${esc(c.coverUrl||'')}"><span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${c.pageCount||1} ${t('pages')}</span><span>❤ ${c.likes} · 👁 ${c.views}</span></div><div class="sh-act"><button class="btn sm ghost" data-dpub="${esc(c.id)}">🗑️ ${t('del')}</button></div></div></div>`}).join(''):empty('📖','pub_empty',true);
+  else if(ptab==='pub')list=pubs.length?pubs.map((d,i)=>{const c=normUser(d);return `<div class="cc" data-id="${esc(c.id)}" style="--c:${c.c};cursor:pointer"><div class="cv"><img alt="" src="${esc(c.coverUrl||'')}"><span class="tag">${esc(c.genre)}</span></div><div class="in"><h3>${esc(c.title)}</h3><div class="meta"><span>${c.pageCount||1} ${t('pages')} · ${c.chapters} ${t('chapters')}</span><span>❤ ${c.likes}</span></div><div class="sh-act"><button class="btn sm ghost" data-dpub="${esc(c.id)}">🗑️ ${t('del')}</button></div></div></div>`}).join(''):empty('📖','pub_empty',true);
+  else if(ptab==='sk'){const sk=LS.get('cc_sketches',[]);list=sk.length?sk.map((x,i)=>`<div class="cc" style="--c:${COLS[i%4]};cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${x.img}"></div><div class="in"><h3>${esc(x.name)}</h3><div class="sh-act"><button class="btn sm cy" data-so="${x.id}">${t('open')}</button><button class="btn sm ghost" data-sr="${x.id}">✏️ ${t('rename')}</button><button class="btn sm ghost" data-sd="${x.id}" aria-label="${t('del')}">🗑️</button></div></div></div>`).join(''):empty('✏️','sk_empty',true)}
   else if(ptab==='bm'){const it=Object.entries(bm).filter(([id])=>findComic(id));list=it.length?it.map(([id,v])=>card(findComic(id),v.p)).join(''):empty('🔖','bm_empty')}
   else list=posts.length?posts.map(x=>`<div class="cc" style="--c:var(--pink);cursor:default"><div class="cv" style="aspect-ratio:auto"><img alt="" src="${esc(x.imageUrl)}"></div><div class="in"><h3>${esc(x.title)}</h3><div class="sh-act"><button class="btn sm ghost" data-dp="${esc(x.id)}">🗑️ ${t('del')}</button></div></div></div>`).join(''):empty('🌟','posts_empty');
   $('#profileBody').innerHTML=`<h2>${t('prof_h')}</h2>
   <div class="pf"><div class="big">${esc(m.avatar)}</div><div class="fld"><input class="field" id="pName" maxlength="24" value="${esc(p.name)}" placeholder="${t('name_ph')}" aria-label="${t('name_ph')}"><div class="rowf" style="margin-top:10px" id="pAv">${AVATARS.map(a=>`<button class="chip${a===p.avatar?' on':''}" data-a="${a}" aria-label="${a}">${a}</button>`).join('')}</div></div></div>
   <p class="note">${t('safe_tip')}</p>
   <div class="stats"><div><b>${projects.length}</b>${t('st_comics')}</div><div><b>${pubs.length}</b>${t('pt_pub')}</div><div><b>${posts.length}</b>${t('st_posts')}</div><div><b>${likes}</b>${t('st_likes')}</div></div>
-  <div class="seg" id="pSeg">${[['mine','pt_mine'],['pub','pt_pub'],['bm','pt_bm'],['posts','pt_posts']].map(([k,l])=>`<button class="chip${ptab===k?' on':''}" data-k="${k}">${t(l)}</button>`).join('')}</div>
+  <div class="seg" id="pSeg">${[['mine','pt_mine'],['sk','pt_sk'],['pub','pt_pub'],['bm','pt_bm'],['posts','pt_posts']].map(([k,l])=>`<button class="chip${ptab===k?' on':''}" data-k="${k}">${t(l)}</button>`).join('')}</div>
   <div class="shelf" id="pList">${list}</div>
-  <div class="note" style="margin-top:34px">${DB.mode==='firebase'?(DB.user?`${t('acct_in')} <b>${esc(DB.user.displayName||'')}</b>`:t('acct_out')):t('acct_local')}
+  <div class="note" style="margin-top:34px">${DB.mode==='firebase'?(DB.user?`${t('acct_in')} <b>${esc(DB.user.displayName||'')}</b>`:t('acct_out')):t(DB.mode==='sheets'?'acct_sheets':'acct_local')}
   <div class="rowf" style="margin-top:10px">${DB.mode==='firebase'?(DB.user?`<button class="btn sm ghost" id="so">${t('sign_out')}</button>`:`<button class="btn sm" id="si">${t('sign_in')}</button>`):''}<button class="btn sm ghost" id="wipe">🧹 ${t('wipe')}</button></div></div>`;
-  $('#pName').onchange=e=>{const q=prof();q.name=e.target.value.trim();LS.set('cc_profile',q);paintProfile()};
+  $('#pName').onchange=e=>{if(blocked(e.target.value)){e.target.value=prof().name;return}const q=prof();q.name=e.target.value.trim();LS.set('cc_profile',q);paintProfile()};
   $$('#pAv .chip').forEach(b=>b.onclick=()=>{const q=prof();q.avatar=b.dataset.a;LS.set('cc_profile',q);paintProfile()});
   $$('#pSeg .chip').forEach(b=>b.onclick=()=>{ptab=b.dataset.k;paintProfile()});
   bindCards($('#pList'));
   $$('[data-o]',$('#pList')).forEach(b=>b.onclick=()=>openProject(b.dataset.o));
   $$('[data-d]',$('#pList')).forEach(b=>b.onclick=()=>deleteProject(b.dataset.d,paintProfile));
   $$('[data-dp]',$('#pList')).forEach(b=>b.onclick=async()=>{if(await ask({title:t('q_del'),confirm:true})){await DB.del('feed',b.dataset.dp)}});
-  $$('[data-dpub]',$('#pList')).forEach(b=>b.onclick=async e=>{e.stopPropagation();if(await ask({title:t('q_del'),confirm:true})){await DB.del('comics',b.dataset.dpub)}});
+  $$('[data-dpub]',$('#pList')).forEach(b=>b.onclick=async e=>{e.stopPropagation();if(await ask({title:t('q_del'),confirm:true}))await deleteUserComic(b.dataset.dpub)});
+  $$('[data-so]',$('#pList')).forEach(b=>b.onclick=()=>{const x=LS.get('cc_sketches',[]).find(s=>s.id===b.dataset.so);if(x)remixInto(x.img,'toast_sk_open')});
+  $$('[data-sr]',$('#pList')).forEach(b=>b.onclick=async()=>{const l=LS.get('cc_sketches',[]),x=l.find(s=>s.id===b.dataset.sr);if(!x)return;const v=await ask1(t('rename'),x.name);if(v){x.name=v.slice(0,40);LS.set('cc_sketches',l);paintProfile()}});
+  $$('[data-sd]',$('#pList')).forEach(b=>b.onclick=async()=>{if(await ask({title:t('q_del'),confirm:true})){LS.set('cc_sketches',LS.get('cc_sketches',[]).filter(s=>s.id!==b.dataset.sd));paintProfile()}});
   const si=$('#si');if(si)si.onclick=()=>DB.signIn().catch(()=>toast(t('toast_post_fail')));
   const so=$('#so');if(so)so.onclick=()=>DB.signOut();
   $('#wipe').onclick=async()=>{if(await ask({title:t('q_wipe'),confirm:true})){Object.keys(localStorage).filter(k=>k.indexOf('cc_')===0).forEach(k=>localStorage.removeItem(k));location.hash='#home';location.reload()}};
+}
+
+/* ---- cloud sync of bookmarks and saved panels for signed-in people (users/{uid}/...) ---- */
+const uid=()=>DB.mode==='firebase'&&DB.user?DB.user.uid:null;
+function cloudBm(id,on){
+  const u=uid();if(!u)return;const col='users/'+u+'/bookmarks';
+  if(!on)return DB.del(col,id);
+  const c=findComic(id),b=bmAll()[id]||{p:0};
+  return DB.put(col,{id,userId:u,comicId:id,comicTitle:c?c.title:'',coverUrl:'',lastReadChapter:1,progressPercent:Math.round((b.p||0)*100),updatedAt:iso()});
+}
+function cloudProject(rec,on){
+  const u=uid();if(!u)return;const col='users/'+u+'/saved_panels';
+  if(!on)return DB.del(col,rec.id);
+  const json=JSON.stringify(rec.panels);if(json.length>800000)return;
+  return DB.put(col,{id:rec.id,userId:u,title:rec.title,baseImage:rec.thumb,sketchType:rec.layout,colorStyle:String(rec.style||0),animationMode:String(rec.motion||0),panelsJson:json,updatedAt:iso()});
+}
+function startUserSync(){
+  const u=uid();
+  if(!u){['ubm','usp'].forEach(k=>{if(unsubs[k]){unsubs[k]();delete unsubs[k]}});return}
+  subscribe('ubm',DB,'users/'+u+'/bookmarks',list=>{
+    const b=bmAll();let ch=false;
+    list.forEach(d=>{const p=(d.progressPercent||0)/100;if(!b[d.comicId]){b[d.comicId]={p,ts:Date.now()};ch=true}else if(p>b[d.comicId].p){b[d.comicId].p=p;ch=true}});
+    if(ch){LS.set('cc_bm',b);if(route==='home'||route==='profile')renderRoute()}
+  });
+  subscribe('usp',DB,'users/'+u+'/saved_panels',list=>{
+    const ps=LS.get('cc_projects',[]);let ch=false;
+    list.forEach(d=>{if(ps.some(x=>x.id===d.id))return;try{ps.push({id:d.id,title:d.title,layout:d.sketchType,style:+d.colorStyle||0,motion:+d.animationMode||0,ts:Date.now(),thumb:d.baseImage,panels:JSON.parse(d.panelsJson)});ch=true}catch(e){}});
+    if(ch&&LS.set('cc_projects',ps)&&(route==='profile'||route==='studio'))renderRoute();
+  });
+}
+
+async function deleteUserComic(id){
+  const d=UCOMICS.find(x=>x.id===id),n=d?(d.pageCount||0):0;
+  for(let i=0;i<n;i++)await DB.del('comics/'+id+'/pages',pid(i));
+  await DB.del('comics',id);
 }
 
 /* ===== main ===== */
@@ -1261,8 +1513,17 @@ function renderRoute(){
   else if(v==='collab')renderCollab(arg);
   else if(v==='profile')renderProfile();
 }
-function go(){renderRoute();window.scrollTo(0,0)}
-function onAuthChange(){renderRoute()}
+/* with the Google Sheets backend only the collections of the page you are looking at are refreshed (every 20 seconds) */
+function activeCols(){
+  if(route==='home')return['comics'];
+  if(route==='read')return['comics','comics/'+curComic+'/pages'];
+  if(route==='community')return['feed'];
+  if(route==='collab')return['collaborations'];
+  if(route==='profile')return['feed','comics'];
+  return[];
+}
+function go(){const pr=route,pc=curComic;renderRoute();window.scrollTo(0,0);if(pr==='read'&&pc&&uid()&&bmAll()[pc])cloudBm(pc,true)}
+function onAuthChange(){startUserSync();renderRoute()}
 addEventListener('hashchange',go);
 
 function renderAll(){applyLang();buildNav();$$('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));renderRoute();redrawAll()}
@@ -1276,7 +1537,8 @@ startShared();probeAI();
 $('#bgs').innerHTML=$('#bgs').innerHTML;
 renderRoute();
 if(document.fonts){['400 20px Bangers','800 20px "Baloo 2"','800 20px "Baloo Da 2"'].forEach(f=>document.fonts.load(f,'Aঅ').then(redrawAll).catch(()=>{}));document.fonts.ready.then(redrawAll)}
-if(window.COMICCRAFT_FIREBASE&&window.COMICCRAFT_FIREBASE.apiKey)enableFirebase(window.COMICCRAFT_FIREBASE).catch(e=>console.warn('Firebase not enabled:',e));
+if(window.COMICCRAFT_SHEETS&&window.COMICCRAFT_SHEETS.url)enableSheets(window.COMICCRAFT_SHEETS);
+else if(window.COMICCRAFT_FIREBASE&&window.COMICCRAFT_FIREBASE.apiKey)enableFirebase(window.COMICCRAFT_FIREBASE).catch(e=>console.warn('Firebase not enabled:',e));
 if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 })();

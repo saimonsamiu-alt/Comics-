@@ -1,7 +1,13 @@
-// Optional settings. Leave everything empty to keep the app fully local (no accounts, nothing uploaded).
+// Optional settings. Leave everything empty to keep the app fully local (nothing is uploaded).
 //
-// 1) Shared Community feed, published comics and live Collab (Firebase):
-//    paste your Firebase WEB app config here. See SETUP_BN.md for the steps.
+// OPTION A: Google Sheets + Drive (no Firebase, no accounts). Easiest. Steps: SETUP_SHEETS_BN.md
+//   Paste the Web app URL you get from Apps Script ("https://script.google.com/macros/s/.../exec").
+window.COMICCRAFT_SHEETS = {
+  url: ""
+};
+
+// OPTION B: Firebase (real accounts with Google sign-in, live updates). Steps: SETUP_BN.md
+//   Used only when COMICCRAFT_SHEETS.url above is empty.
 window.COMICCRAFT_FIREBASE = {
   apiKey: "",
   authDomain: "",
@@ -9,6 +15,7 @@ window.COMICCRAFT_FIREBASE = {
   appId: "",
   firestoreDatabaseId: "ai-studio-android-comiccra-d6b98e48-7901-4d3d-b738-2f60b3636c26"
 };
-// 2) AI Comic Magic: only if this website is NOT hosted on the same Vercel project as /api/ai-ink
-//    (for example the site is on GitHub Pages). Put the full Vercel URL, e.g. "https://your-app.vercel.app/api/ai-ink"
+
+// AI Comic Magic: only if this website is NOT on the same Vercel project as /api/ai-ink
+// (for example the site is on GitHub Pages). Put the full Vercel URL, e.g. "https://your-app.vercel.app/api/ai-ink"
 window.COMICCRAFT_AI_URL = "";
