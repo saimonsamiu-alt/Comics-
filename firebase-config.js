@@ -3,7 +3,7 @@
 // OPTION A: Google Sheets + Drive (no Firebase, no accounts). Easiest. Steps: SETUP_SHEETS_BN.md
 //   Paste the Web app URL you get from Apps Script ("https://script.google.com/macros/s/.../exec").
 window.COMICCRAFT_SHEETS = {
-  url: ""
+  url: "https://script.google.com/macros/s/AKfycbxVSM-SSzNFTkK75MGdEsZS-MrMjvvrIGtAFFRGOPkEBPlxgq9LS7bPhKzNV5LjV5Kj/exec"
 };
 
 // OPTION B: Firebase (real accounts with Google sign-in, live updates). Steps: SETUP_BN.md
